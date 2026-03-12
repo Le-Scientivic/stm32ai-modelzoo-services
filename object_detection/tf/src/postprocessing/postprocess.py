@@ -422,7 +422,14 @@ def meshgrid(*tensors):
 def decode_outputs(predictions,cfg):
     import torch 
     
-    outputs = torch.as_tensor(predictions)   
+    if isinstance(predictions, tf.Tensor):
+        predictions = predictions.numpy()
+
+    # Heuristic: if dim1 < dim2 (e.g. 85 < 8400), it takes (N, C, L). Transpose to (N, L, C).
+    if predictions.shape[1] < predictions.shape[2]:
+        predictions = predictions.transpose(0, 2, 1)
+
+    outputs = torch.as_tensor(predictions)
     
     img_w = cfg.model.input_shape[-1]
     img_h = cfg.model.input_shape[-2]
@@ -674,7 +681,12 @@ def get_nmsed_detections(cfg, predictions, image_size):
     cpp = cfg.postprocessing
     
     if model_family(cfg.model.model_type) == "ssd":
-        boxes, scores = decode_ssd_predictions(predictions)
+        if cfg.model.framework == "torch":
+            boxes, scores = decode_ssd_torch_predictions(predictions, cfg)
+        else:
+            boxes, scores = decode_ssd_predictions(predictions)
+    elif model_family(cfg.model.model_type) == "st_yolod":
+        boxes, scores = decode_yolod_predictions(predictions, cfg)
     elif model_family(cfg.model.model_type) == "yolo":
         boxes, scores = decode_yolo_predictions(predictions, num_classes, cpp.yolo_anchors, image_size)
 
@@ -753,9 +765,9 @@ def get_detections(cfg, predictions, image_size):
     
     elif model_family(cfg.model.model_type) == "yolov8n":
         boxes, scores = decode_yolov8n_predictions(predictions)
-    elif("yolod" in str(getattr(cfg.model, "model_name", "") or "").lower()) or ("yolod" in str(getattr(cfg.model, "model_type", "") or "").lower()):
+    elif model_family(cfg.model.model_type) == "st_yolod":
         boxes, scores = decode_yolod_predictions(predictions,cfg)
-    elif("ssd" in str(getattr(cfg.model, "model_name", "") or "").lower()) or ("ssd" in str(getattr(cfg.model, "model_type", "") or "").lower()):
+    elif model_family(cfg.model.model_type) == "ssd":
         boxes, scores = decode_ssd_torch_predictions(predictions,cfg)
     else:
         raise ValueError("Unsupported model type")

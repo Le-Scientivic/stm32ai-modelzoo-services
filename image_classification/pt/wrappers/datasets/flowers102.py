@@ -38,9 +38,9 @@ def get_flowers102(cfg):
     train_loader = test_loader = val_loader = pred_loader = None
     args["data_dir"] = getattr(cfg.dataset,"data_dir", None)
     if args["data_dir"]:
-        LOGGER.info(f"Loading training data from {cfg.dataset.data_dir}/flowers-102")
+        LOGGER.info(f"Loading training data from {cfg.dataset.data_dir} -> flowers-102")
         train_loader = create_training_dataset(args)
-        LOGGER.info(f"Loading validation data from {cfg.dataset.data_dir}/flowers-102")
+        LOGGER.info(f"Loading validation data from {cfg.dataset.data_dir} -> flowers-102")
         val_loader = create_validation_dataset(args)
     else:
         LOGGER.info("No path available for training and validation data")

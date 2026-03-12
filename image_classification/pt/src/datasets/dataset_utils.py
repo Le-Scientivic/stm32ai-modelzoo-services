@@ -179,13 +179,7 @@ def prepare_kwargs_for_dataloader(cfg):
     from types import SimpleNamespace
 
     from common.utils import flatten_config
-    # exceptional handling of scale variable. as config has two variables of same name.
-    # and when u flatten config they both becomes same
-    scale = None
-    if "data_augmentation" in cfg and "scale" in cfg.data_augmentation:
-        scale = cfg.data_augmentation.scale
-    if not scale:
-        scale = [0.08, 1.0]
+
     # convert hydra heirarchical config to flat config
     args_raw = flatten_config(cfg)
     # convert dict based config to argument parser type
@@ -239,7 +233,7 @@ def prepare_kwargs_for_dataloader(cfg):
         }
     # create data loaders w/ augmentation pipeline
     test_interpolation = 'bicubic'
-    train_interpolation = getattr(args, 'train_interpolation', "random")
+    train_interpolation = getattr(args, 'interpolation', "random")
     args.no_aug = getattr(args, 'no_aug', False)
     if args.no_aug or not train_interpolation:
         train_interpolation = test_interpolation
@@ -253,14 +247,14 @@ def prepare_kwargs_for_dataloader(cfg):
         batch_size=batch_size,
         test_batch_size=validation_batch_size,
         download=getattr(args, 'data_download', False),
-        distributed=getattr(args, 'distributed', False), # created same way as before Nikhil
-        use_prefetcher=args.prefetcher, # created same way as before Nikhil
+        distributed=getattr(args, 'distributed', False), # created same way as before 
+        use_prefetcher=args.prefetcher, # created same way as before
         no_aug=args.no_aug,
         re_prob=getattr(args, 'reprob', 0),
         re_mode=getattr(args, 'remode', 'pixel'),
         re_count=getattr(args, 'recount', 1),
         re_split=getattr(args, 'resplit', False),
-        scale=scale,
+        scale=getattr(args, 'crop_range', [0.08, 1.0]), # names are different as scale is used for other purpose in the config
         ratio=getattr(args, 'ratio', [0.75, 1.33]),
         hflip=getattr(args, 'hflip', 0.5),
         vflip=getattr(args, 'vflip', 0.0),
@@ -269,13 +263,13 @@ def prepare_kwargs_for_dataloader(cfg):
         num_aug_repeats=getattr(args, 'aug_repeats', 0),
         num_aug_splits=num_aug_splits,
         train_interpolation=train_interpolation,
-        test_interpolation=test_interpolation, # the way it was done in 
-        mean=args.mean, # from config directly Nikhil
-        std=args.std, # from config directly Nikhil
+        test_interpolation=test_interpolation,
+        mean=args.mean,
+        std=args.std,
         num_workers=getattr(args, 'workers', 4),
-        collate_fn=collate_fn, # created same way as before Nikhil
+        collate_fn=collate_fn,
         pin_memory=getattr(args, 'pin_mem', False),
-        device=device, # TODO multi gpu
+        device=device, # multi gpu
         use_multi_epochs_loader=getattr(args, 'use_multi_epochs_loader', False),
         worker_seeding=getattr(args, 'worker_seeding', False),
         test_path=getattr(args, 'test_path', None),

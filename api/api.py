@@ -66,6 +66,7 @@ import object_detection.pt.wrappers.models
 import object_detection.pt.wrappers.datasets
 import object_detection.pt.wrappers.training
 import object_detection.pt.wrappers.evaluation
+import object_detection.pt.wrappers.prediction  # enable prediction for PyTorch models
 
 # for pose estimation
 import pose_estimation.tf.wrappers.datasets             # this is done so that registeration happens before get_dataloader is called
@@ -93,6 +94,10 @@ import semantic_segmentation.tf.wrappers.quantization
 # for arc fault detection
 import arc_fault_detection.tf.wrappers.models.custom_models
 import arc_fault_detection.tf.wrappers.datasets
+import arc_fault_detection.tf.wrappers.quantization
+import arc_fault_detection.tf.wrappers.training
+import arc_fault_detection.tf.wrappers.evaluation
+import arc_fault_detection.tf.wrappers.prediction
 
 # for speech enhancement
 import speech_enhancement.pt.wrappers.models.custom_models

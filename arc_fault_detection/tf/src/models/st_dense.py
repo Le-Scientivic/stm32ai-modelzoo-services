@@ -11,6 +11,16 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 def get_st_dense_model(input_shape=(4,512,1), num_classes=2):
+    """
+    Build the dense Arc Fault Detection model.
+
+    Args:
+        input_shape (tuple): Model input shape (channels, length, 1).
+        num_classes (int): Number of output classes.
+
+    Returns:
+        keras.Model: The constructed Keras model.
+    """
     inputs = keras.Input(shape=input_shape)
     # reshape to (n_channels, seq_len)
     x = layers.Reshape((input_shape[0], input_shape[1]))(inputs)

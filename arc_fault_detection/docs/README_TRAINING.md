@@ -183,7 +183,7 @@ The `training` section of the configuration file specifies the parameters for th
 
 ```yaml
 training:
-  resume_training_from:
+  initialize_parameters_from:
   batch_size: 256
   epochs: 40
   optimizer:
@@ -203,11 +203,13 @@ training:
       patience: 70
 ```
 
-- `resume_training_from`: (Optional) Path to a previously saved model to resume training from.
+- `initialize_parameters_from`: (Optional) Path to a previously saved model to be used to initialize the parameters of the loaded or created model. 
 - `batch_size`: Number of samples per gradient update.
 - `epochs`: Number of training epochs.
 - `optimizer`: Optimizer configuration (e.g., Adam with a specified learning rate).
 - `callbacks`: (Optional) TensorFlow callbacks for training control, such as learning rate scheduling and early stopping.
+
+`initialize_parameters_from` is a convenient way to warm-start training in the Model Zoo. It initializes the loaded model with trained weights (even if the number of channels differs), as long as the architecture is compatible (same backbone and layer names). If a layer shape does not match, the initialization with the given parameters is skipped and either the original loaded parameters or a random initialization are considered. Provide a `.keras` or `.h5` checkpoint path.
 
 All TensorFlow optimizers can be used in the `optimizer` subsection. All TensorFlow callbacks can be used in the `callbacks` subsection, except for `ModelCheckpoint`, `TensorBoard`, and `CSVLogger`, which are built-in and cannot be redefined.
 

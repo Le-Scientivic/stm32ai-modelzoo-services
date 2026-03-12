@@ -54,11 +54,11 @@ if [[ "$COMPATIBLE" == *"$STM32MP257"* ]] || [[ "$COMPATIBLE" == *"$STM32MP255"*
   IMAGE_CLASSIFICATION_MODEL="mobilenet_v2_1.0_224_int8_per_tensor$NN_EXT"
   IMAGE_CLASSIFICATION_LABEL="labels_imagenet_2012"
   if [[ "$NN_EXT" == ".nb" ]]; then
-    OBJ_DETEC_MODEL="ssd_mobilenet_v2_fpnlite_100_256_int8$NN_EXT"
-    OBJ_DETEC_MODEL_LABEL="labels_coco_dataset_80"
+    OBJ_DETEC_MODEL="st_yoloxn_d033_w025_320_int8$NN_EXT"
+    OBJ_DETEC_MODEL_LABEL="class_names"
   else
-    OBJ_DETEC_MODEL="ssd_mobilenet_v2_fpnlite_100_256_int8$NN_EXT"
-    OBJ_DETEC_MODEL_LABEL="labels_coco_dataset_80"
+    OBJ_DETEC_MODEL="st_yoloxn_d033_w025_320_int8$NN_EXT"
+    OBJ_DETEC_MODEL_LABEL="class_names"
   fi
 else
   echo "Software X-LINUX-AI installed is not compatible with the board, please install X-LINUX-AI CPU version for plateform without hardware accelerator"

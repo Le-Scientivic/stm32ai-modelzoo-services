@@ -34,7 +34,7 @@ It is highly recommended to use real data for the quantization.
 # user_config.yaml
 
 model:
-  model_path: ../../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416_int8.tflite
+  model_path: ../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416_int8.tflite
   model_type: st_yoloxn
 operation_mode: chain_eqeb
 

@@ -8,8 +8,9 @@ general:
 
 # ---------------- Model Configuration ---------------- #
 model:
-  framework: 'torch' 
+  framework: 'torch'
   model_type : st_yolod # this config is for yolod model family 
+  model_path: ../../stm32ai-modelzoo/object_detection/st_yolodv2milli_pt/ST_pretrainedmodel_public_dataset/coco/st_yolodv2milli_actrelu_pt_coco_320/st_yolodv2milli_actrelu_pt_coco_320_qdq_int8.onnx
   # following are supported models 
   # ['st_yolodv2milli_actrelu_pt', 'st_yolodv2tiny_actrelu_pt']
   model_name: st_yolodv2milli_actrelu_pt 
@@ -57,7 +58,7 @@ postprocessing:
   NMS_thresh: 0.5
   IoU_eval_thresh: 0.5
   plot_metrics: True #True   # Plot precision versus recall curves. Default is False.
-  max_detection_boxes: 10
+  max_detection_boxes: 100
 
 tools:
    stedgeai:

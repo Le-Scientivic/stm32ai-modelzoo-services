@@ -294,9 +294,10 @@ And open the given IP address in your browser.
 <details open><summary><a href="#5"><b>5. Advanced settings</b></a></summary><a id="5"></a>
 <ul><details open><summary><a href="#5-1">5.1 Continue Training your own model and Transfer Learning</a></summary><a id="5-1"></a>
 
-You may want to continue training your own model on a new dataset rather than training your model from scratch.
+If you wish to further train an existing model on a new dataset, instead of starting from scratch, you can do so by specifying the `model_path` attribute in the `model:` section of your configuration file. This allows you to load a pre-trained model for continued training or to resume training after an interruption or crash.
 
-This can be done using the `model_path` attribute of the `model` section to provide the path to the model file to use as illustrated in the example below.
+To facilitate resuming training after an interruption or crash, the model is saved at the end of each epoch in the current experiment's output directory. These saved model files can be found under `tf/src/experiments_outputs/<date-and-time>/saved_models`.
+
 
 ```yaml
 operation_mode: training

@@ -478,10 +478,6 @@ The contents of the other files saved under an experiment directory are describe
 | training_curves.png     | metrics | Training learning curves (losses and accuracies) |
 
 
-All the directory names, including the naming pattern of experiment directories, can be changed using the configuration file. The names of the files cannot be changed.
-The models in the 'best_augmented_model.keras' and 'last_augmented_model.keras' Keras files contain rescaling and data augmentation layers. 
-These files can be used to resume training that you interrupted or that crashed. This will be explained in the training service [README](./README_TRAINING.md). These model files are not intended to be used outside of the Model Zoo context.
-
 <ul><details open><summary><a href="#4-1">4.1 Saved results</a></summary><a id="4-1"></a>
 
 All of the training and evaluation artifacts are saved in the current output simulation directory, which is located at **experiments_outputs/\<date-and-time\>**.

@@ -28,15 +28,15 @@ def make_wrapper_func(model_name_zoo, model_name_library):
             # Loading model with imagenet weights
             model = torchvision.models.__dict__[model_name_library](
                 pretrained=cfg.model.pretrained, num_classes=NUM_IMAGENET_CLASSES)
-            # TODO: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+            # Warning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
             if cfg.dataset.num_classes != NUM_IMAGENET_CLASSES:
                 pretrained_dict = model.state_dict()
                 # Loading model without weights
                 model = torchvision.models.__dict__[model_name_library](
                     pretrained=False, num_classes=cfg.dataset.num_classes)
-                # TODO: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
+                # Warning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
                 load_state_dict_partial(model, pretrained_dict)
-                LOGGER.info(f"Loaded {model_name_zoo} pretrained on imagenet (partial)")
+                LOGGER.info(f"Loaded {model_name_zoo} pretrained on imagenet")
         else:
             # Loading model without weights
             model = torchvision.models.__dict__[model_name_library](

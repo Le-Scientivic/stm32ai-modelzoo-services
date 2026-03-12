@@ -32,7 +32,7 @@ def make_wrapper_func(model_name_zoo, model_name_library):
                 # Loading model without weights
                 model = ptcv_get_model(model_name_library, num_classes=cfg.dataset.num_classes)
                 load_state_dict_partial(model, pretrained_dict)
-                LOGGER.info(f"Loaded {model_name_zoo} pretrained on imagenet (partial)")
+                LOGGER.info(f"Loaded {model_name_zoo} pretrained on imagenet")
         else:
             # Loading model without weights
             model = ptcv_get_model(model_name_library, num_classes=cfg.dataset.num_classes)

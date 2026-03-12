@@ -257,17 +257,18 @@ class AEDTrainer:
                 log_to_file(self.cfg.output_dir,(f"Using pretrained weights"))
             else:
                 print("[INFO] : No pretrained weights were loaded, training from randomly initialized weights.")
-        elif self.cfg.training.resume_training_from:
-            print(f"[INFO] : Resuming training from model file {self.cfg.training.resume_training_from}")
-            log_to_file(self.cfg.output_dir, (f"Model file : {self.cfg.training.resume_training_from}"))
         elif self.cfg.model.model_path:
-            print(f"[INFO] : Loaded model file {self.cfg.model.model_path}")
-            log_to_file(self.cfg.output_dir ,(f"Model file : {self.cfg.model.model_path}"))
+            if self.cfg.training.resume_training:
+                print(f"[INFO] : Resuming training from model file {self.cfg.model.model_path}")
+                log_to_file(self.cfg.output_dir, (f"Model file : {self.cfg.model.model_path }"))
+            else: 
+                print(f"[INFO] : Initialized model with weights from model file {self.cfg.model.model_path}")
+                log_to_file(self.cfg.output_dir, (f"Weights from model file : {self.cfg.model.model_path}"))
         if self.cfg.dataset.dataset_name: 
             log_to_file(self.output_dir, f"Dataset : {self.cfg.dataset.dataset_name}")
 
         # Display a summary of the model
-        if self.cfg.training.resume_training_from:
+        if self.cfg.training.resume_training:
             model_summary(self.model)
             if len(self.model.layers) == 2:
                 model_summary(self.model.layers[1])
@@ -287,7 +288,7 @@ class AEDTrainer:
         # Initialize the augmented model that includes data augmentation layers
         model_layers = []
 
-        if not self.cfg.training.resume_training_from:
+        if not self.cfg.training.resume_training:
             # Append eventual data augmentation layers to the model
             if self.cfg.data_augmentation:
                 data_augmentation_layers = get_data_augmentation(

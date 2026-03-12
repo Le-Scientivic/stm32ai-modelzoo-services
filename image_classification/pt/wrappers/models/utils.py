@@ -18,7 +18,6 @@ NUM_IMAGENET_CLASSES = 1000
 from pathlib import Path
 import torch
 
-# TODO this function can be simpler that it only takes url (model_path or URL[mode_name_dataset_res])
 def load_checkpoint_ic(model, cfg):
     """
     Load pretrained weights into an already-defined model.
@@ -53,7 +52,6 @@ def load_checkpoint_ic(model, cfg):
             'Use pretrained=False if you want to create a untrained model.'
         )
 
-# TODO : nobody is using, but i feel above function should have same signature as this
 def load_checkpoint(model, model_name, dataset_name, model_urls, device='cpu'):
     if f'{model_name}_{dataset_name}' not in model_urls:
         raise ValueError(

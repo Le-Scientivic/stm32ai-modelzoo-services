@@ -131,7 +131,7 @@ def process_mode(cfg: DictConfig):
 
     elif mode == 'deployment':
         if cfg.hardware_type == "MPU":
-            deploy_mpu(cfg, model_path_to_deploy=model.model_path, credentials=credentials)
+            deploy_mpu(cfg, model_path_to_deploy=model.model_path)
         else:
             deploy(cfg=cfg, model_path_to_deploy=model.model_path)
         print("[INFO] deployment complete")

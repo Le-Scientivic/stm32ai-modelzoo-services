@@ -128,7 +128,7 @@ class ICTrainer:
         self.validate_loss_fn = None
 
         self.saver = None
-        self.output_dir = None
+        self.output_dir = os.path.join(args.output_dir, args.saved_models_dir)
         self.writer = None
 
         self.lr_scheduler = None
@@ -156,9 +156,16 @@ class ICTrainer:
         self.setup_checkpoint_and_logging()
         self.setup_lr_scheduler_and_start()
         self.train_loop()
-        onnx_model = torch_model_export_static(cfg=self.cfg, 
-                                    model_dir=self.output_dir, 
-                                    model=self.model.to("cpu"))
+        onnx_model = None
+        if self.args.distributed:
+            if self.args.local_rank == 0:
+                onnx_model = torch_model_export_static(cfg=self.cfg, 
+                                         model_dir=self.output_dir, 
+                                         model=self.model.module.to("cpu"))
+        else: 
+            onnx_model = torch_model_export_static(cfg=self.cfg, 
+                                         model_dir=self.output_dir, 
+                                         model=self.model.to("cpu"))   
         return onnx_model
 
     # ------------------ Environment & Device ------------------
@@ -198,8 +205,6 @@ class ICTrainer:
                 assert args.amp_dtype in ('float16', 'bfloat16')
             if args.amp_dtype == 'bfloat16':
                 self.amp_dtype = torch.bfloat16
-
-        utils.random_seed(getattr(args, 'seed', 42), args.rank)
 
         if getattr(args, 'fuser', None):
             utils.set_jit_fuser(args.fuser)
@@ -331,15 +336,18 @@ class ICTrainer:
     def resume_if_needed(self):
         args = self.args
         self.resume_epoch = None
-        if getattr(args, 'resume', None):
+        if getattr(args, 'resume_training_from', None):
+            print("Resuming training from: ", args.resume_training_from)
             self.resume_epoch = resume_checkpoint(
                 self.model,
-                args.resume,
+                args.resume_training_from,
                 optimizer=None if getattr(args, 'no_resume_opt', False) else self.optimizer,
                 loss_scaler=None if getattr(args, 'no_resume_opt', False) else self.loss_scaler,
                 log_info=utils.is_primary(args),
             )
-
+            print("Resuming training from: ", args.resume_training_from)
+            print("Resuming training from epoch: ", self.resume_epoch)
+    
     def setup_model_ema(self):
         args = self.args
         self.model_ema = None
@@ -347,9 +355,9 @@ class ICTrainer:
             # Important to create EMA model after cuda(), DP wrapper, and AMP but before DDP wrapper
             self.model_ema = utils.ModelEmaV2(
                 self.model, decay=args.model_ema_decay, device='cpu' if args.model_ema_force_cpu else None)
-            if getattr(args, 'resume', None):
-                # if a resume path provided, try to load EMA weights from it
-                load_checkpoint(self.model_ema.module, args.resume, use_ema=True)
+            if getattr(args, 'resume_training_from', None):
+                # if a resume_training_from path provided, try to load EMA weights from it
+                load_checkpoint(self.model_ema.module, args.resume_training_from, use_ema=True)
 
     def setup_distributed_and_compile(self):
         args = self.args
@@ -429,7 +437,7 @@ class ICTrainer:
         self.best_metric = None
         self.best_epoch = None
         self.saver = None
-        self.output_dir = None
+        self.output_dir = os.path.join(args.output_dir, args.saved_models_dir)
 
         if utils.is_primary(args):
             if getattr(args, 'project_name', None):
@@ -440,7 +448,6 @@ class ICTrainer:
                     safe_model_name(args.model_name),
                     str(self.data_config['input_size'][-1])
                 ])
-            self.output_dir = os.path.join(args.output_dir, args.saved_models_dir)
             decreasing = True if eval_metric == 'loss' else False
             self.saver = CheckpointSaver(
                 model=self.model,
@@ -453,7 +460,7 @@ class ICTrainer:
                 decreasing=decreasing,
                 max_history=getattr(args, 'checkpoint_hist', 10)
             )
-            # write args to file # todo different from before NIKHIl
+            # write args to file # different from before
             args_text = yaml.safe_dump(vars(args))
             with open(os.path.join(self.output_dir, 'args.yaml'), 'w') as f:
                 f.write(args_text)
@@ -645,7 +652,10 @@ class ICTrainer:
         data_start_time = update_start_time = time.time()
         optimizer.zero_grad()
         update_sample_count = 0
+        #max_debug_steps = 4 #debug
         for batch_idx, (input, target) in enumerate(loader):
+            #if batch_idx >= max_debug_steps: #debug
+            #    break #debug
             last_batch = batch_idx == last_batch_idx
             need_update = last_batch or (batch_idx + 1) % accum_steps == 0
             update_idx = batch_idx // accum_steps

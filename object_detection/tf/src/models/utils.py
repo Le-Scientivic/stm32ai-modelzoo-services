@@ -29,21 +29,21 @@ def prepare_kwargs_for_model(cfg: DictConfig):
 
 
 def model_family(model_type: str) -> str:
-    if model_type in ("ssd_mobilenet_v2_fpnlite"):
+    if model_type == "ssd_mobilenet_v2_fpnlite":
         return "ssd_mobilenet_v2_fpnlite"
     elif model_type in ("yolov2t", "st_yololcv1"):
         return "yolo"
     elif model_type in ("yolov8n", "yolov11n", "yolov5u"):
         return "yolov8n"
-    elif model_type in ("st_yoloxn"):
+    elif model_type == "st_yoloxn":
         return "st_yoloxn"
     elif model_type in ("yolov4t", "yolov4"):
         return "yolov4"
-    elif model_type in ("face_detect_front"):
+    elif model_type == "face_detect_front":
         return "face_detect_front"
-    elif model_type in ("st_yolod"):
+    elif model_type == "st_yolod":
         return "st_yolod"
-    elif model_type in ("ssd"):
+    elif model_type == "ssd":
         return "ssd"
     else:
         raise ValueError(f"Internal error: unknown model type {model_type}")
@@ -73,8 +73,8 @@ def load_model_for_training(cfg: DictConfig) -> tuple:
     model = None
                         
     # Resume a previously interrupted training
-    if cfg.model.resume_training_from:
-        resume_dir = os.path.join(cfg.model.resume_training_from, cfg.general.saved_models_dir)
+    if cfg.model.resume_training:
+        resume_dir = os.path.join(cfg.model.resume_training, cfg.general.saved_models_dir)
         print(f"[INFO] : Resuming training from directory {resume_dir}\n")
         
         message = "\nUnable to resume training."

@@ -7,3 +7,4 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 from .train import train
+from .afd_trainer import AFDTrainer

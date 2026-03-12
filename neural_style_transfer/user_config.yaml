@@ -1,12 +1,14 @@
-model:
+general:
   project_name: neural_style_transfer
-  model_path:  ../../stm32ai-modelzoo/neural_style_transfer/xinet_picasso_muse/Public_pretrainedmodel_public_dataset/coco_2017_80_classes_picasso/xinet_a75_picasso_muse_160/xinet_a75_picasso_muse_160_nomp.tflite
   logs_dir: logs
   display_figures: true
   global_seed: 123
   gpu_memory_limit: 4
 
 operation_mode: prediction
+
+model:
+  model_path:  ../../stm32ai-modelzoo/neural_style_transfer/xinet_picasso_muse/Public_pretrainedmodel_public_dataset/coco_2017_80_classes_picasso/xinet_a75_picasso_muse_160/xinet_a75_picasso_muse_160_nomp.tflite
 
 dataset:
   dataset_name: coco

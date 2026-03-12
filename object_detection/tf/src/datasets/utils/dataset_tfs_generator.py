@@ -7,7 +7,7 @@
 #  *--------------------------------------------------------------------------------------------*/
 
 import os
-from glob import glob
+import glob
 from pathlib import Path
 from tqdm import tqdm
 from statistics import mean

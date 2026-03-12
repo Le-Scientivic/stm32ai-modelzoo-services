@@ -56,6 +56,20 @@ class MultiResCallback(tf.keras.callbacks.Callback):
         # Change the resolution of the input layer based on the batch number
         res = self.resolutions[((batch - 1) // self.period) % len(self.resolutions)]
         self.model.set_resolution(res)
+class SaveBaseModelWithWeightsCallback(tf.keras.callbacks.Callback):
+    """
+    Custom callback to save the base_model as a full Keras model when a new best is found.
+    """
+    def __init__(self, base_model, save_path, filepath=None):
+        super().__init__()
+        self.base_model = base_model
+        self.save_path = save_path
+        self.filepath = filepath
+        
+    def on_epoch_end(self, epoch, logs=None):
+        self.base_model.load_weights(self.filepath)
+        self.base_model.save(self.save_path)
+
 
 def _get_callback_monitoring(args: DictConfig, callback_name: str = None, message: str = None) -> tuple:
 
@@ -85,7 +99,7 @@ def _get_callback_monitoring(args: DictConfig, callback_name: str = None, messag
     return monitor, mode
 
 
-def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir: str = None,
+def _get_callbacks(callbacks_dict: DictConfig, base_model: tf.keras.Model = None, output_dir: str = None, logs_dir: str = None,
                   saved_models_dir: str = None) -> List[tf.keras.callbacks.Callback]:
     """
     This function creates the list of Keras callbacks to be passed to 
@@ -175,6 +189,22 @@ def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir:
     callback = tf.keras.callbacks.ModelCheckpoint(
                         filepath=os.path.join(output_dir, saved_models_dir, "last_weights.weights.h5"),
                         save_best_only=False,save_weights_only=True,monitor="val_loss",mode="min")
+    callback_list.append(callback)
+
+    # Add the custom callback to save the base_model as a full Keras model when a new best is found
+    callback = SaveBaseModelWithWeightsCallback(
+                    base_model=base_model,
+                    save_path=os.path.join(output_dir, saved_models_dir, "best_model.keras"),
+                    filepath=os.path.join(output_dir, saved_models_dir, "best_weights.weights.h5")
+                )
+    callback_list.append(callback)
+
+    # Add the custom callback to save the base_model as a full Keras model at the end of the epoch
+    callback = SaveBaseModelWithWeightsCallback(
+                    base_model=base_model,
+                    save_path=os.path.join(output_dir, saved_models_dir, "last_model.keras"),
+                    filepath=os.path.join(output_dir, saved_models_dir, "last_weights.weights.h5")
+                )
     callback_list.append(callback)
 
     # Add the TensorBoard callback
@@ -291,6 +321,7 @@ class PETrainer:
         # Generate callbacks
         self.callbacks = _get_callbacks(
             callbacks_dict=self.cfg.training.callbacks,
+            base_model=self.base_model,
             output_dir=self.output_dir,
             saved_models_dir=self.saved_models_dir,
             logs_dir=self.cfg.general.logs_dir

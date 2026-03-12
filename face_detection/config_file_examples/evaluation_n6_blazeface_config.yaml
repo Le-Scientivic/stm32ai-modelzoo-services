@@ -9,8 +9,8 @@ operation_mode: evaluation
 
 evaluation:
   profile: profile_O3
-  input_type: uint8     # int8 / uint8 / float32
-  output_type: int8     # int8 / uint8 / float32
+  input_type: float32     # int8 / uint8 / float32
+  output_type: float32     # int8 / uint8 / float32
   input_chpos: chlast   # chlast / chfirst
   output_chpos: chlast  # chlast / chfirst
   target: stedgeai_n6 # host, stedgeai_host, stedgeai_n6

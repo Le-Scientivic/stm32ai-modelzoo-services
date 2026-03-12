@@ -6,4 +6,5 @@
 #  * If no LICENSE file comes with this software, it is provided AS-IS.
 #  *--------------------------------------------------------------------------------------------*/
 
-from .afd_test_bench import load_afd_test_bench
+from .load_datasets import load_afd_test_bench
+from .afd_test_bench import AFDTestBench

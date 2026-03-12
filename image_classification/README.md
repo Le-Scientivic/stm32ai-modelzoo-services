@@ -40,7 +40,7 @@ The different values of the `operation_mode` attribute and the corresponding ope
 | `chain_eqeb`             | Sequentially: evaluation of a float model,  quantization, evaluation of quantized model, benchmarking of quantized model |
 | `chain_qd`               | Sequentially: quantization of a float model, deployment of quantized model |
 
-The list of the available models in [STM32 model zoo](https://github.com/STMicroelectronics/stm32ai-modelzoo/) and a quick way to explore them by size, inference time...can be found in [Pytorch models](/docs/README_MODELS_TORCH.md) or in [Tensorflow models](/docs/README_MODELS.md) readmes.
+The list of the available models in [STM32 model zoo](https://github.com/STMicroelectronics/stm32ai-modelzoo/) and a quick way to explore them by size, inference time...can be found in [Pytorch models](docs/README_MODELS_TORCH.md) or in [Tensorflow models](docs/README_MODELS.md) readmes.
 
 ## You don't know where to start? You feel lost?
 Don't forget to follow our tuto below for a quick ramp up : 

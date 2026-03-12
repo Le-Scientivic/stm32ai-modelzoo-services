@@ -95,14 +95,14 @@ def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir:
 
     # Add built-in callbacks that saves the best model obtained so far
     callback_list.append(tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(output_dir, saved_models_dir, "best_augmented_model.keras"),
+        filepath=os.path.join(output_dir, saved_models_dir, "best_model.keras"),
         save_best_only=True,
         monitor="val_accuracy",
         mode="max"
     ))
     # Add the Keras callback that saves the model at the end of the epoch
     callback_list.append(tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(output_dir, saved_models_dir, "last_augmented_model.keras"),
+        filepath=os.path.join(output_dir, saved_models_dir, "last_model.keras"),
         save_best_only=False,
         monitor="val_accuracy",
         mode="max"
@@ -224,17 +224,11 @@ class HARTrainer:
         """
         Saves the best model and evaluates it on validation and test datasets.
         """
-        # Load the best model checkpoint
+        # Load the best model checkpoint and return it
         models_dir = os.path.join(self.output_dir, self.saved_models_dir)
-        checkpoint_filepath = os.path.join(models_dir, "best_augmented_model.keras")
-        checkpoint_model = tf.keras.models.load_model(checkpoint_filepath)
-        # output_model_input_shape = tuple(self.model.inputs[0].shape)
-        best_model = checkpoint_model
-        # best_model, _ = change_model_input_shape(best_model, output_model_input_shape)
-        # best_model.compile(loss=get_loss(self.num_classes), metrics=['accuracy'])
-        best_model_path = os.path.join(self.output_dir, f"{self.saved_models_dir}/best_model.keras")
-        best_model.save(best_model_path)
-        setattr(best_model, 'model_path', best_model_path)
+        checkpoint_filepath = os.path.join(models_dir, "best_model.keras")
+        best_model = tf.keras.models.load_model(checkpoint_filepath)
+        setattr(best_model, 'model_path', checkpoint_filepath)
         print('[INFO] : Training complete.')
         return best_model
 

@@ -41,7 +41,7 @@ The most important parts here are to define:
 
 model:
   # path to the model to benchmark
-  model_path: ../../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416.keras
+  model_path: ../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416.keras
   model_type: st_yoloxn
 
 operation_mode: chain_qb

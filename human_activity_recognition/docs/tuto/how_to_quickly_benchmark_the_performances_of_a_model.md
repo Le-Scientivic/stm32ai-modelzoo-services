@@ -28,7 +28,7 @@ The most important parts here are to define:
 
 model:
   # path to the ST Model Zoo model to benchmark
-  model_path: ../../../stm32ai-modelzoo/human_activity_recognition/ign/ST_pretrainedmodel_custom_dataset/mobility_v1/ign_wl_24/ign_wl_24.h5
+  model_path: ../../stm32ai-modelzoo/human_activity_recognition/ign/ST_pretrainedmodel_custom_dataset/mobility_v1/ign_wl_24/ign_wl_24.h5
 
 # operation mode
 operation_mode: benchmarking

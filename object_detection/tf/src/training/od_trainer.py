@@ -102,18 +102,14 @@ class ODTrainer:
         elif self.cfg.model.model_path:
             print(f"[INFO] : The model type is {self.cfg.model.model_path}")
             log_to_file(self.output_dir, f"Model type : {self.cfg.model.model_type}")
-            if self.cfg.model.resume_training_from:
-                log_to_file(self.output_dir, f"Resuming training from : {self.cfg.model.model_path}")
-                print(f"[INFO] : resuming training from {self.cfg.model.model_path} model")
-            else:
-                print(f"[INFO] : using {self.cfg.model.model_path} model")
-                log_to_file(self.output_dir, f"Model file : {self.cfg.model.model_path}")
-                if self.cfg.model.model_type in ["yolov2t","st_yololcv1"]:
-                    self.base_model = change_yolo_model_number_of_classes(self.base_model,num_classes=self.num_classes,
-                                                                num_anchors=len(self.cfg.postprocessing.yolo_anchors))
-                elif self.cfg.model.model_type in ["st_yoloxn"]:
-                    self.base_model = change_yolo_x_model_number_of_classes(self.base_model,num_classes=self.num_classes,
-                                                                num_anchors=len(self.cfg.postprocessing.yolo_anchors))
+            print(f"[INFO] : using {self.cfg.model.model_path} model")
+            log_to_file(self.output_dir, f"Model file : {self.cfg.model.model_path}")
+            if self.cfg.model.model_type in ["yolov2t","st_yololcv1"]:
+                self.base_model = change_yolo_model_number_of_classes(self.base_model,num_classes=self.num_classes,
+                                                            num_anchors=len(self.cfg.postprocessing.yolo_anchors))
+            elif self.cfg.model.model_type in ["st_yoloxn"]:
+                self.base_model = change_yolo_x_model_number_of_classes(self.base_model,num_classes=self.num_classes,
+                                                            num_anchors=len(self.cfg.postprocessing.yolo_anchors))
 
         self.base_model.compile()
         base_model_path = os.path.join(self.saved_models_dir, "base_model.keras")
@@ -274,6 +270,7 @@ class ODTrainer:
         
         self.callbacks = get_callbacks(
                     cfg=self.cfg.training.callbacks,
+                    base_model=self.base_model,
                     num_classes=self.num_classes,
                     iou_eval_threshold=self.cfg.postprocessing.IoU_eval_thresh,
                     image_sizes=image_sizes,

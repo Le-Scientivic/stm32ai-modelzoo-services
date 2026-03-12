@@ -113,7 +113,7 @@ preprocessing:
   time_domain: False
 
 training:
-  resume_training_from:
+  initialize_parameters_from:
   batch_size: 256
   epochs: 4
   optimizer:

@@ -56,7 +56,7 @@ def gen_h_user_file_h7(config: DictConfig = None, quantized_model_path: str = No
         input_shape_raw = inputs[0].shape
         input_shape = [1,input_shape_raw[2],input_shape_raw[3],input_shape_raw[1]]
     else:
-        raise TypeError("Please provide a TFLITE or ONNX model for N6 deployment")
+        raise TypeError("Please provide a TFLITE or ONNX model for H7 deployment")
 
     class_names = params.dataset.class_names
 

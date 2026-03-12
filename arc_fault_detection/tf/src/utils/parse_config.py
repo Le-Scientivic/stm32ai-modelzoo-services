@@ -214,7 +214,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
     # Training section parsing
     if cfg.operation_mode in mode_groups.training:
         legal = ["model", "batch_size", "epochs", "optimizer",
-                 "callbacks", "resume_training_from"]
+                 "callbacks", "initialize_parameters_from"]
         parse_training_section(cfg.training, 
                                legal=legal)
 

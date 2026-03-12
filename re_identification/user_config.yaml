@@ -75,8 +75,7 @@ data_augmentation:    # Optional section
   
 
 training:
-  resume_training_from: # Optional, use to resume a training from a previous experiment.
-                        # Example: experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.h5 
+  resume_training: # Optional, use to resume a training from a previous experiment.                      
   frozen_layers: None  #(0:-1)            # Optional, use if you want to freeze some layers (by default all layers are trainable)
   dropout:  0.3                     # Optional, use it if you want a dropout layer to be included in the model
   batch_size: 128

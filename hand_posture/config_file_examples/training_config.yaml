@@ -29,7 +29,8 @@ data_augmentation:
   random_flip:
     mode: horizontal
 
-training:
+training: 
+  #resume_training:
   frozen_layers:
   dropout: 0.2
   batch_size: 32

@@ -95,7 +95,6 @@ def create_training_dataset(args):
         re_num_splits=re_num_splits,
         use_prefetcher=args["use_prefetcher"],
     )
-    
     dataset_train = create_dataset(
         'imagenet',
         root=data_root,
@@ -107,7 +106,6 @@ def create_training_dataset(args):
         seed=args["seed"],
         repeats=args["repeats"],
     )
-    #print(type(dataset_train))
     dataset_train.transform = args.get("train_transforms", default_train_transforms)
     dataset_train.classes = range(args["num_classes"])
     

@@ -29,8 +29,6 @@ model:
   dropout: 0.5                     # Optional, only used for `st_ign` or `st_gmp` model use it if you want a dropout layer to be included in the model
 
 training:
-  # resume_training_from: # Optional, use to resume a training from a previous experiment.
-                        # Example: experiments_outputs/YYYY_MM_DD_HH_mm_ss/saved_models/last_augmented_model.h5 
   # frozen_layers: (0:-1)            # Optional, use if you want to freeze some layers (by default all layers are trainable)
   dropout: 0.5                     # Optional, only used for `ign` or `gmp` model use it if you want a dropout layer to be included in the model
   batch_size: 256

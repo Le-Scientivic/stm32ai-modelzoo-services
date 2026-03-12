@@ -13,7 +13,7 @@ You will retrieve multiples files in order to [analyze](analyze_model_with_cloud
 * [Generate associated C code](generate_model_with_cloud.py)
 * [Benchmark my model to STM32 Benchmark Farm](benchmark_model_with_cloud.py) 
 
-### [Connect to STM32Cube.AI Developer Cloud](connect_to_cloud.py)
+### [Connect to ST Edge AI Developer Cloud](connect_to_cloud.py)
 
 Connect to STM32Cube.AI Dev. Cloud script describes how you shall configure your environment variables in order to use our service. It includes env. getters, and a request to get your user informations
 
@@ -42,7 +42,7 @@ Benchmark script permits to get informations about a given model associated to a
 ```
 - Once you have logged in to your MyST account, add your username and password in env. variables
 ```sh
-    export STM32AI_USERNAME="dupont@example.com"
+    export STM32AI_USERNAME="username@example.com"
     export STM32AI_PASSWORD="password"
 ```
 - When getting started with one example, kindly replace "`mobilenet_v1_0.25_96.h5`" by the path of your own model. 

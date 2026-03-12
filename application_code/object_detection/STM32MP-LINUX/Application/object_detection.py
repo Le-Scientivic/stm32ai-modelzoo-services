@@ -29,7 +29,7 @@ import os.path
 from os import path
 from PIL import Image
 from timeit import default_timer as timer
-from ssd_mobilenet_pp import NeuralNetwork
+from st_yoloxn_pp import NeuralNetwork
 
 #init gstreamer
 Gst.init(None)
@@ -671,47 +671,27 @@ class OverlayWindow(Gtk.Window):
             cr.set_line_width(4)
             cr.set_font_size(self.ui_cairo_font_size)
 
-            # Outputs are not in same order for ssd_mobilenet v1 and v2, outputs are already filtered by score in
-            # ssd_mobilenet_v2 which is not the case for v1
             for i in range(np.array(self.app.nn_result_scores).size):
-                if self.app.nn.model_type == "ssd_mobilenet_v2":
-                    # Scale NN outputs for the display before drawing
-                    y0 = int(self.app.nn_result_locations[0][i][1] * preview_height)
-                    x0 = int(self.app.nn_result_locations[0][i][0] * preview_width)
-                    y1 = int(self.app.nn_result_locations[0][i][3] * preview_height)
-                    x1 = int(self.app.nn_result_locations[0][i][2] * preview_width)
-                    accuracy = self.app.nn_result_scores[0][i] * 100
-                    color_idx = int(self.app.nn_result_classes[0][i])
-                    x = x0 + offset
-                    y = y0 + vertical_offset
-                    width = (x1 - x0)
-                    height = (y1 - y0)
-                    label = self.app.nn.get_label(i,self.app.nn_result_classes)
-                    cr.set_source_rgb(self.bbcolor_list[color_idx][0],self.bbcolor_list[color_idx][1],self.bbcolor_list[color_idx][2])
-                    cr.rectangle(int(x),int(y),width,height)
-                    cr.stroke()
-                    cr.move_to(x , (y - (self.ui_cairo_font_size/2)))
-                    text_to_display = label + " " + str(int(accuracy)) + "%"
-                    cr.show_text(text_to_display)
-                elif (self.app.nn.model_type == "ssd_mobilenet_v1" and self.app.nn_result_scores[0][i] > args.conf_threshold ):
-                    # Scale NN outputs for the display before drawing
-                    y0 = int(self.app.nn_result_locations[0][i][0] * preview_height)
-                    x0 = int(self.app.nn_result_locations[0][i][1] * preview_width)
-                    y1 = int(self.app.nn_result_locations[0][i][2] * preview_height)
-                    x1 = int(self.app.nn_result_locations[0][i][3] * preview_width)
-                    accuracy = self.app.nn_result_scores[0][i] * 100
-                    color_idx = int(self.app.nn_result_classes[0][i])
-                    x = x0 + offset
-                    y = y0 + vertical_offset
-                    width = (x1 - x0)
-                    height = (y1 - y0)
-                    label = self.app.nn.get_label(i,self.app.nn_result_classes)
-                    cr.set_source_rgb(self.bbcolor_list[color_idx][0],self.bbcolor_list[color_idx][1],self.bbcolor_list[color_idx][2])
-                    cr.rectangle(int(x),int(y),width,height)
-                    cr.stroke()
-                    cr.move_to(x , (y - (self.ui_cairo_font_size/2)))
-                    text_to_display = label + " " + str(int(accuracy)) + "%"
-                    cr.show_text(text_to_display)
+                # For st_yoloxn (normalized [x_min, y_min, x_max, y_max])
+                y0 = int(self.app.nn_result_locations[0][i][1] * preview_height)
+                x0 = int(self.app.nn_result_locations[0][i][0] * preview_width)
+                y1 = int(self.app.nn_result_locations[0][i][3] * preview_height)
+                x1 = int(self.app.nn_result_locations[0][i][2] * preview_width)
+                accuracy = self.app.nn_result_scores[0][i] * 100
+                color_idx = int(self.app.nn_result_classes[0][i])
+                x = x0 + offset
+                y = y0 + vertical_offset
+                width = (x1 - x0)
+                height = (y1 - y0)
+                label = self.app.nn.get_label(i, self.app.nn_result_classes)
+                cr.set_source_rgb(self.bbcolor_list[color_idx][0],
+                                self.bbcolor_list[color_idx][1],
+                                self.bbcolor_list[color_idx][2])
+                cr.rectangle(int(x), int(y), width, height)
+                cr.stroke()
+                cr.move_to(x, (y - (self.ui_cairo_font_size/2)))
+                text_to_display = label + " " + str(int(accuracy)) + "%"
+                cr.show_text(text_to_display)
         return True
 
 class Application:
@@ -889,8 +869,8 @@ if __name__ == '__main__':
     parser.add_argument("--input_mean", default=127.5, help="input mean")
     parser.add_argument("--input_std", default=127.5, help="input standard deviation")
     parser.add_argument("--num_threads", default=None, help="Select the number of threads used by tflite interpreter to run inference")
-    parser.add_argument("--conf_threshold", default=0.70, type=float, help="threshold of accuracy above which the boxes are displayed (default 0.70)")
-    parser.add_argument("--iou_threshold", default=0.45, type=float, help="threshold of intersection over union above which the boxes are displayed (default 0.45)")
+    parser.add_argument("--conf_threshold", default=0.85, type=float, help="threshold of accuracy above which the boxes are displayed (default 0.70)")
+    parser.add_argument("--iou_threshold", default=0.30, type=float, help="threshold of intersection over union above which the boxes are displayed (default 0.45)")
     parser.add_argument("--camera_src", default="LIBCAMERA", help="use V4L2SRC for MP1x and LIBCAMERA for MP2x")
     parser.add_argument("--debug", default=False, action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args()

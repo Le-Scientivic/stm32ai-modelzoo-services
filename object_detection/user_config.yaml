@@ -15,7 +15,8 @@ model:
   input_shape: (256,256,3)
 
 dataset:
-  dataset_name: COCO_2017_person
+  format: tfs
+  dataset_name: coco
   class_names: [person]
   training_path: ./datasets/od_coco_2017_person/train
   validation_split: 0.1

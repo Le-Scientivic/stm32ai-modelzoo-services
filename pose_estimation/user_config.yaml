@@ -59,7 +59,6 @@ data_augmentation:
     mode: horizontal
 
 training:
-  resume_training_from: # experiments_outputs/2024_11_06_16_44_31/
   frozen_layers: # (0:154)
   batch_size: 64
   epochs: 1000

@@ -132,7 +132,8 @@ def parse_dataset_section(cfg: DictConfig, mode: str = None, mode_groups: DictCo
     legal_tf = ["dataset_name", "class_names", "classes_file_path", "training_path", "validation_path", "validation_split", 
                 "test_path", "quantization_path", "quantization_split", "prediction_path", "check_image_files", "seed",
                 "num_classes","data_dir","data_download"]
-    legal_pt = ["dataset_name", "data_dir", "num_classes", "train_split", "val_split", "test_split", "data_download"]
+    legal_pt = ["dataset_name", "data_dir", "num_classes", "train_split", "val_split", "test_split", "data_download",
+                  "workers", "worker_seeding", "pin_mem", "no_prefetcher", "use_multi_epochs_loader"]
     legal = legal_tf + legal_pt
     required = []
     one_or_more = []
@@ -252,7 +253,7 @@ def parse_preprocessing_section(cfg: DictConfig, mode: str = None) -> None:
         # Check resizing interpolation value
         check_config_attributes(cfg.resizing, specs={"all": ["interpolation"]}, section="preprocessing.resizing")
         interpolation_methods = ["bilinear", "nearest", "area", "lanczos3", "lanczos5", "bicubic", "gaussian",
-                                 "mitchellcubic"]
+                                 "mitchellcubic", "random"]
         if cfg.resizing.interpolation not in interpolation_methods:
             raise ValueError(f"\nUnknown value for `interpolation` attribute. Received {cfg.resizing.interpolation}\n"
                              f"Supported values: {interpolation_methods}\n"
@@ -406,11 +407,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
         legal = ["project_name", "logs_dir", "saved_models_dir", "deterministic_ops",
                  "display_figures", "global_seed", "gpu_memory_limit", "num_threads_tflite", "device"]
     elif cfg.model.framework == "torch":
-        legal = ["project_name", "output", "display_figures", "seed", "gpu_memory_limit",
-                 "workers", "log_interval", "recovery_interval", "checkpoint_hist",
-                 "save_images", "amp", "amp_dtype", "amp_impl", "no_ddp_bb", "synchronize_step",
-                 "pin_mem", "no_prefetcher", "eval_metric", "tta", "local_rank",
-                 "use_multi_epochs_loader", "log_wandb", "log_tb", "saved_models_dir", "device"]
+        legal = ["project_name", "output", "seed", "gpu_memory_limit", "saved_models_dir", "display_figures"]
 
     required = []
     parse_general_section(cfg.general,
@@ -441,13 +438,16 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
         if cfg.data_augmentation or cfg.custom_data_augmentation:
             parse_data_augmentation_section(cfg, config_dict)
         if cfg.model.framework == "tf":
-            legal = ["batch_size", "epochs", "optimizer", "dropout", "frozen_layers",
+            legal = ["batch_size", "resume_training","epochs", "optimizer", "dropout", "frozen_layers",
                  "callbacks", "dryrun", 'trainer_name']
         elif cfg.model.framework == "torch":
             legal = ["epochs", "batch_size", "validation_batch_size", "optimizer",
                      "lr_scheduler", "bn_momentum", "bn_eps", "sync_bn", "dist_bn",
                      "split_bn", "model_ema", "model_ema_force_cpu", "model_ema_decay",
-                     "worker_seeding", 'trainer_name']
+                     "worker_seeding", "trainer_name", "log_wandb", "log_tb", "log_interval",
+                     "recovery_interval", "checkpoint_hist", "save_images", "amp", "amp_dtype",
+                     "amp_impl", "tta", "eval_metric", "no_ddp_bb", "synchronize_step", "resume_training_from"]
+
         cfg.training.trainer_name = "ic_trainer"
         parse_training_section(cfg.training, 
                                legal=legal)

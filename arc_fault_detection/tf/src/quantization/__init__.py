@@ -6,4 +6,10 @@
 #  * If no LICENSE file comes with this software, it is provided AS-IS.
 #  *--------------------------------------------------------------------------------------------*/
 
-from .quantize import quantize
+from .onnx_quantizer import OnnxPTQQuantizer
+from .tflite_quantizer import TFLitePTQQuantizer
+
+__all__ = [
+	"OnnxPTQQuantizer",
+	"TFLitePTQQuantizer",
+]

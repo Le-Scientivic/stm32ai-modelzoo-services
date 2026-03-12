@@ -120,7 +120,6 @@ model:
     input_shape: (24, 3, 1) # Your input shape: window of 24 sample of 3 axis accelerometer
 
 training:
-  resume_training_from: null
   # all the parameters below are standard in machine learning, you can look for them in google
   # they mostly depends on the topology of your model and will need a lot of testing
   dropout: 0.5

@@ -25,7 +25,6 @@ def depth_prediction_dataloader(prediction_path: str, color_mode: str = "rgb") -
                   if os.path.isfile(os.path.join(prediction_path, f))]
     if not image_files:
         raise ValueError(f"No valid image files found in prediction path '{prediction_path}'.")
-    print(f"[INFO] : Found {len(image_files)} images for prediction in '{prediction_path}'.")
     for fname in image_files:
         img_path = os.path.join(prediction_path, fname)
         try:

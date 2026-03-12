@@ -39,9 +39,9 @@ def get_food101(cfg):
     args["data_dir"] = getattr(cfg.dataset,"data_dir", None)
     # Both train and val are loaded for standard food dataset.
     if args["data_dir"]:
-        LOGGER.info(f"Loading training data from {cfg.dataset.data_dir}/food-101")
+        LOGGER.info(f"Loading training data from {cfg.dataset.data_dir} -> food-101")
         train_loader = create_training_dataset(args)
-        LOGGER.info(f"Loading validation data from {cfg.dataset.data_dir}/food-101")
+        LOGGER.info(f"Loading validation data from {cfg.dataset.data_dir} -> food-101")
         val_loader = create_validation_dataset(args)
     else:
         LOGGER.info("No path available for training and validation data")

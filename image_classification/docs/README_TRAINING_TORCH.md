@@ -90,74 +90,19 @@ general:
   project_name: 'pt_imagenet'        # Name of the project (used for logging, checkpoints, runs)
   output: ''                         # Output directory for experiment artifacts (empty = default)
   saved_models_dir: saved_models     # Directory where model checkpoints will be saved
-  display_figures: False             # Whether to display plots/figures during training
   seed: 42                           # Random seed for reproducibility
   gpu_memory_limit: 3                # GPU memory limit in GB (0 or unset = no limit)
-  workers: 4                         # Number of data loader worker processes
-  log_interval: 50                   # Logging frequency (in training iterations)
-  recovery_interval: 0               # Interval for recovery checkpoints (0 = disabled)
-  checkpoint_hist: 10                # Number of past checkpoints to keep
-  save_images: False                 # Whether to save sample images during training/evaluation
-  amp: false                         # Enable Automatic Mixed Precision (AMP)
-  amp_dtype: "float16"               # AMP data type (e.g., float16, bfloat16)
-  amp_impl: "native"                 # AMP implementation ("native" = PyTorch autocast)
-  no_ddp_bb: false                   # Disable DDP backbone wrapping (for distributed training)
-  synchronize_step: false            # Synchronize GPU operations every step (debug/perf impact)
-  pin_mem: false                     # Enable pinned memory for DataLoader (faster host→GPU transfer)
-  no_prefetcher: true                # Disable data prefetcher (use standard DataLoader)
-  eval_metric: "top1"                # Primary evaluation metric (e.g., top1, top5)
-  tta: 0                             # Test-time augmentation factor (0 = disabled)
-  local_rank: 0                      # Local GPU rank for distributed training
-  use_multi_epochs_loader: false     # Use multi-epoch DataLoader to reduce startup overhead
-  log_wandb: false                   # Enable logging to Weights & Biases
-  log_tb: false                      # Enable logging to TensorBoard
+  display_figures: False             # Whether to display plots/figures during training
 ```
-
 The general section defines global settings that control experiment setup, hardware usage, logging, checkpointing, and runtime behavior during training and evaluation.
 
 By default the checkpoints,onnx model, training summary and tensorboard logs will saved at `pt/src/experiments_outputs/<date-and-time>/saved_models`. 
 
-`seed` is Random seed for reproducible training runs.
-
-`display_figures` is currently not in use.
+`seed` is Random seed for reproducible training runs. This attribute is optional, with a default value of 42.
 
 `gpu_memory_limit` is currently not in use.
 
-`workers` is number of worker processes used by the data loader.
-
-`pin_mem` is Enables pinned memory for faster CPU → GPU data transfer.
-
-`no_prefetcher` disables the data prefetcher and uses the standard PyTorch DataLoader.
-
-`use_multi_epochs_loader` uses a multi-epoch DataLoader to reduce worker startup overhead.
-
-`synchronize_step` forces GPU synchronization at every step (useful for debugging; may impact performance).
-
-`log_interval` Logging frequency measured in training iterations.
-
-`log_wandb` Enables logging to Weights & Biases.
-
-`log_tb` Enables logging to TensorBoard.
-
-`eval_metric` Primary evaluation metric (e.g., top1, top5, loss).
-
-`recovery_interval` Interval for saving recovery checkpoints. Set to 0 to disable.
-
-`checkpoint_hist` Number of historical checkpoints to retain.
-
-`save_images` Whether to save sample images during training or evaluation.
-
-`amp` Enables Automatic Mixed Precision (AMP) for faster training and lower memory usage.
-
-`amp_dtype` Data type used for AMP (e.g., float16, bfloat16).
-
-`amp_impl` AMP backend implementation (native uses PyTorch autocast).
-
-`no_ddp_bb` Disables Distributed Data Parallel (DDP) wrapping for the model backbone.
-
-`local_rank` Local GPU rank used in distributed training setups.
-
-`tta` Test-time augmentation factor. Set to 0 to disable TTA.
+`display_figures` is a Boolean flag that, when true, shows interactive figures you must interact with to continue the process.
 
 </details>
 
@@ -188,9 +133,27 @@ dataset:
   quantization_split: 0.01                     # Fraction of data used for quantization calibration
   test_path: ""                              # Optional test dataset path for evaluation (defaults to validation data)
   quantization_path: ""                      # Optional quantization dataset path (defaults to training data)
+  workers: 4                                   # Number of data loader worker processes
+  worker_seeding: all
+  pin_mem: false                               # Enable pinned memory for DataLoader (faster host→GPU transfer)
+  no_prefetcher: true                          # Disable data prefetcher (use standard DataLoader)
+  use_multi_epochs_loader: false               # Use multi-epoch DataLoader to reduce startup overhead
+  #data_download: True                         # Valid for food101 and flowers102 datasets.
 ```
 
 If test set path is not provided to evaluate the model accuracy after training and quantization, then the validation set is used as the test set. If `quantization_path` path is not provided then a `0.01` (i.e. `quantization_split`) portion of training data will be used for quantization. 
+
+The `class_names` attribute specifies the classes in the dataset. This information must be provided in the YAML file. If the `class_names` attribute is absent, the `classes_file_path` argument can be used as an alternative, pointing to a text file containing the class names. Alternatively, the class names can be deduced from the folder names of each class.
+
+`train_split` and `val_split` are optional variables just for the `imagenet` dataset. Useful in scenarios when your training and validation folders are renamed to something other than "train" and "val". The standard ImageNet dataset has "train" and "val" folders inside the "imagenet" directory.
+
+`workers` is number of worker processes used by the data loader.
+
+`pin_mem` is Enables pinned memory for faster CPU → GPU data transfer.
+
+`no_prefetcher` disables the data prefetcher and uses the standard PyTorch DataLoader.
+
+`use_multi_epochs_loader` uses a multi-epoch DataLoader to reduce worker startup overhead.
 </ul></details>
 
 <ul><details open><summary><a href="#2-3-2">2.3.2 Custom Dataset (Imagenet-like)</a></summary><a id="2-3-2"></a>
@@ -226,6 +189,11 @@ dataset:
   quantization_split: 0.01                     # Fraction of data used for quantization calibration
   test_path: ""                                # Optional test dataset path for evaluation (defaults to validation data)
   quantization_path: ""                        # Optional quantization dataset path (defaults to training data)
+  workers: 4                                   # Number of data loader worker processes
+  worker_seeding: all
+  pin_mem: false                               # Enable pinned memory for DataLoader (faster host→GPU transfer)
+  no_prefetcher: true                          # Disable data prefetcher (use standard DataLoader)
+  use_multi_epochs_loader: false               # Use multi-epoch DataLoader to reduce startup overhead
 ```
 
 Three variables that are important for custom dataset: `dataset_name`, `training_path`, and `validation_path`. </details></ul>
@@ -237,30 +205,34 @@ Three variables that are important for custom dataset: `dataset_name`, `training
 
 <details open><summary><a href="#2-4">2.4 Dataset preprocessing</a></summary><a id="2-4"></a>
 
-The images from the dataset need to be preprocessed before they are presented to the network. This includes rescaling and resizing, as illustrated in the YAML code below.
+Images need to be rescaled and resized before they can be used. This is specified in the 'preprocessing' section that is required in all the operation modes.
 
-Note: Only `mean` and `std` are being used in torch image classification. So all the other values like scale, offset, interpolation, aspect_ratio and color_mode will not have any impact on the training. 
+The 'preprocessing' section for this tutorial is shown below.
+**Note:** Only `interpolation`, `mean` and `std` are being used in torch image classification. All other values like `scale`, `offset`, `aspect_ratio`, and `color_mode` will not have any impact on the training.
 
 ```yaml
 preprocessing: 
-  rescaling:
-    scale: 1/255.0 
-    offset: 0
+  rescaling: # Not used for Torch Image Classification
+    scale: None # Not used for Torch Image Classification
+    offset: None # Not used for Torch Image Classification
   resizing:
-    interpolation: nearest # nearest 'Image resize interpolation type (overrides model)'
-    aspect_ratio: fit
-  color_mode: rgb
-  mean: [0.485, 0.456, 0.406] # 'Override mean pixel value of dataset'
-  std: [0.229, 0.224, 0.225] # 'Override std deviation of dataset'
+    interpolation: random # 'random' means random.choice(["bilinear", "bicubic"]). This will be used for training data and bilinear is fixed for test data 
+    aspect_ratio: fit # Not used for Torch Image Classification
+  color_mode: rgb # Not used for Torch Image Classification
+  normalization:
+    mean: [0.485, 0.456, 0.406] # Subtracted from each channel: (x - mean) / std
+    std: [0.229, 0.224, 0.225] # Divides each channel after mean subtraction
 ```
 
-The pixels of the input images are in the interval [0, 255], that is UINT8. If you set `scale` to 1./255 and `offset` to 0, they will be rescaled to the interval [0.0, 1.0]. If you set `scale` to 1/127.5 and `offset` to -1, they will be rescaled to the interval [-1.0, 1.0].
+The `preprocessing` section defines how images are prepared before being given to the model. It controls resizing behavior and pixel value normalization so that inputs match what the model expects.
 
-The `resizing` attribute specifies the image resizing methods you want to use:
-- The value of `interpolation` must be one of *{'bilinear', 'nearest', 'bicubic' and 'random'.}*.
-- The value of `aspect_ratio` must be either *"fit"* or *"crop"*. If you set it to *"fit"*, the resized images will be distorted if their original aspect ratio is not the same as the resizing size. If you set it to *"crop"*, images will be cropped as necessary to preserve the aspect ratio.
+The `rescaling` block is present but not used for Torch Image Classification. Both `scale` and `offset` are set to `None`, so no linear rescaling is applied to pixel values.
 
-The `color_mode` attribute must be one of "*grayscale*", "*rgb*" or "*rgba*".
+The `resizing` block specifies how images are resized. The `interpolation` method is set to `random`, which means that for training data the interpolation is randomly chosen between `bilinear` and `bicubic`, while for test data `bilinear` interpolation is always used. The `aspect_ratio` option is set to `fit`, but it is not used for Torch Image Classification.
+
+The `color_mode` is set to `rgb`, indicating three-channel RGB images. This option is also not used for Torch Image Classification.
+
+The `normalization` block defines per-channel normalization using fixed `mean` and standard deviation values. Each pixel is normalized using the formula (x - `mean`) / `std`. The provided mean and standard deviation values correspond to ImageNet statistics and are applied in RGB channel order.
 
 </details>
 
@@ -273,7 +245,7 @@ The data augmentation functions to apply to the input images are specified in th
 ```yaml
 data_augmentation:
   no_aug: False  
-  scale: [0.08, 1.0]
+  crop_range: [0.08, 1.0]
   ratio: [0.75, 1.33]
   horizontal_flip: 0.5
   vertical_flip: 0.0
@@ -297,7 +269,6 @@ data_augmentation:
   mixup_switch_prob: 0.5
   mixup_mode: "batch"
   smoothing: 0.1
-  train_interpolation: "random"
   drop: 0.0
   drop_connect: null
   drop_path: null
@@ -356,8 +327,6 @@ The data augmentation functions with their parameter settings are applied to the
 
 `smoothing` – Label smoothing factor applied to training targets.
 
-`train_interpolation` – Interpolation method used during image resizing for training.
-
 `drop` – Standard dropout rate applied during training.
 
 `drop_connect` – DropConnect rate for randomly dropping network connections.
@@ -401,6 +370,7 @@ training:
   epochs: 2
   batch_size: 128
   validation_batch_size: null
+  resume_training_from: null       # checkpoint path to resume training
   optimizer:
     opt: 'sgd' 
     momentum: 0.9
@@ -422,7 +392,7 @@ training:
     lr_cycle_decay: 0.5
     lr_cycle_limit: 1
     lr_k_decay: 1.0
-    warmup_lr: !!float 1e-5
+    warmup_lr: 0.00001
     min_lr: 0
     epoch_repeats: 0
     start_epoch: 0
@@ -441,7 +411,19 @@ training:
   model_ema: false
   model_ema_force_cpu: false
   model_ema_decay: 0.9998
-  worker_seeding: all
+  log_wandb: false                   # Enable logging to Weights & Biases
+  log_tb: false                      # Enable logging to TensorBoard
+  log_interval: 50                   # Logging frequency (in training iterations)
+  recovery_interval: 0               # Interval for recovery checkpoints (0 = disabled)
+  checkpoint_hist: 10                # Number of past checkpoints to keep
+  save_images: False                 # Whether to save sample images during training/evaluation
+  amp: false                         # Enable Automatic Mixed Precision (AMP)
+  amp_dtype: "float16"               # AMP data type (e.g., float16, bfloat16)
+  amp_impl: "native"                 # AMP implementation ("native" = PyTorch autocast)
+  tta: 0                             # Test-time augmentation factor (0 = disabled)
+  eval_metric: "top1"                # Primary evaluation metric (e.g., top1, top5)
+  no_ddp_bb: false                   # Disable DDP backbone wrapping (for distributed training)
+  synchronize_step: false            # Synchronize GPU operations every step (debug/perf impact)
 ```
 
 This section controls training duration, optimization strategy, learning rate scheduling, normalization behavior, and stability mechanisms such as EMA and gradient clipping.
@@ -452,6 +434,8 @@ The `batch_size`, `epochs`, and `optimizer` attributes are mandatory. All the ot
 `batch_size` – Number of samples processed per training iteration.
 
 `validation_batch_size` – Batch size used during validation (defaults to training batch size if null).
+
+`resume_training_from` - is set to specify a checkpoint path for resuming training. This can be used if your training ends abruptly and you want to continue training from a specific checkpoints. 
 
 `optimizer.opt` – Optimizer type used for training (e.g., sgd, adam, adamw).
 
@@ -529,7 +513,31 @@ The `batch_size`, `epochs`, and `optimizer` attributes are mandatory. All the ot
 
 `model_ema_decay` – Decay rate controlling how fast EMA weights update.
 
-`worker_seeding` – Strategy for seeding data loader workers to ensure reproducibility.
+`synchronize_step` forces GPU synchronization at every step (useful for debugging; may impact performance).
+
+`log_interval` Logging frequency measured in training iterations.
+
+`log_wandb` Enables logging to Weights & Biases.
+
+`log_tb` Enables logging to TensorBoard.
+
+`eval_metric` Primary evaluation metric (e.g., top1, top5, loss).
+
+`recovery_interval` Interval for saving recovery checkpoints. Set to 0 to disable.
+
+`checkpoint_hist` Number of historical checkpoints to retain.
+
+`save_images` Whether to save sample images during training or evaluation.
+
+`amp` Enables Automatic Mixed Precision (AMP) for faster training and lower memory usage.
+
+`amp_dtype` Data type used for AMP (e.g., float16, bfloat16).
+
+`amp_impl` AMP backend implementation (native uses PyTorch autocast).
+
+`no_ddp_bb` Disables Distributed Data Parallel (DDP) wrapping for the model backbone.
+
+`tta` Test-time augmentation factor. Set to 0 to disable TTA.
 </details>
 
 <details open><summary><a href="#2-8">2.8 Hydra and MLflow settings</a></summary><a id="2-8"></a>
@@ -564,7 +572,7 @@ To launch your model training using a real dataset, run the following command fr
 To train the model on CPU (not recommended as the model training is very intensive and needs a lot of computational resources and needs GPUs for realistic training)
 
 ```bash
-CUDA_VISIBLE_DEVICES=-1 python stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config_coco.yaml
+CUDA_VISIBLE_DEVICES=-1 python stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config.yaml
 ```
 
 ```CUDA_VISIBLE_DEVICES=-1``` is used when training the model on CPU where GPU is also present and CUDA is installed. 
@@ -574,7 +582,7 @@ CUDA_VISIBLE_DEVICES=-1 python stm32ai_main.py --config-path ./config_file_examp
 To train the model on GPU, use the following command:
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config_coco.yaml
+CUDA_VISIBLE_DEVICES=0 python stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config.yaml
 ```
 ```CUDA_VISIBLE_DEVICES=0``` is used when training the model on GPU:0. This is optional if you have only one GPU in your machine and if not provided, training uses GPU:0 by default. 
 
@@ -582,10 +590,10 @@ CUDA_VISIBLE_DEVICES=0 python stm32ai_main.py --config-path ./config_file_exampl
 Multi GPU model is supported for all models using following command.  
 
 ```bash
-CUDA_VISIBLE_DEIVCES=0,1,2,3,4,5,6,7,8 torchrun --master_port 8030 --nproc_per_node 8 stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config.yaml
+torchrun --nproc_per_node=4 stm32ai_main.py --config-path ./config_file_examples_pt/ --config-name training_config.ya
 ```
 
-Above command runs the model on multiple GPUs (in this case, 8 GPUs). Please make sure to use multi-GPU mode in case more than one GPU is available to speedup the training process. Another important point to be considered is that the `batch_size` provided in config file gets multiplied by number of GPUs used for training which means a default `batch_size` of 128 provided in cfg file effectively becomes 128*4 batch size while training on 4 GPUs using multi GPU mode. When running two training on same machine using few GPUs for each training, `master_port` argument should be used and every multiGPU training should use a different available port. 
+Above command runs the model on multiple GPUs. Please make sure to use multi-GPU mode in case more than one GPU is available to speedup the training process. Another important point to be considered is that the `batch_size` provided in config file gets multiplied by number of GPUs used for training which means a default `batch_size` of 128 provided in cfg file effectively becomes 128*4 batch size while training on 4 GPUs using multi GPU mode.
 
 The resulting trained `.pth.tar` and `.onnx` model can be found in the corresponding **experiments_outputs/<YYYY-DD-MM-HH-MM>** folder where YYYY-DD-MM-HH-MM is current date and time. 
 

@@ -8,8 +8,8 @@
 
 import os
 import sys
+import glob
 from pathlib import Path
-from glob import glob
 from tqdm import tqdm
 from collections import Counter
 from statistics import mean

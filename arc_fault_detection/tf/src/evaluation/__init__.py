@@ -6,4 +6,6 @@
 #  * If no LICENSE file comes with this software, it is provided AS-IS.
 #  *--------------------------------------------------------------------------------------------*/
 
-from .evaluate import evaluate, evaluate_h5_model
+from .keras_evaluator import AFDKerasEvaluator
+from .tflite_evaluator import AFDTFliteEvaluator
+from .onnx_evaluator import AFDONNXEvaluator

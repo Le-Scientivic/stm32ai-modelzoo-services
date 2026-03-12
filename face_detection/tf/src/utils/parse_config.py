@@ -177,7 +177,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
     print(f"[INFO] : Running `{cfg.operation_mode}` operation mode")
     cfg.use_case = "object_detection"
     if cfg.model:
-        legal = ["framework", "model_path", "resume_training_from", "model_name", "pretrained", "input_shape",
+        legal = ["framework", "model_path", "model_name", "pretrained", "input_shape",
                  "depth_mul", "width_mul", "model_type"]
         required=["model_type"]
         parse_model_section(cfg.model, mode=cfg.operation_mode, mode_groups=mode_groups, legal=legal, required=required)

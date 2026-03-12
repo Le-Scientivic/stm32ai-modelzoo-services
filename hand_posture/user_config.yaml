@@ -31,6 +31,7 @@ data_augmentation:    # Optional section
     mode: horizontal # horizontal, vertical or horizontal_and_vertical
 
 training:
+  resume_training: False
   frozen_layers: #(0:-1)            # Optional, use if you want to freeze some layers (by default all layers are trainable)
   dropout: 0.2                     # Optional, use it if you want a dropout layer to be included in the model
   batch_size: 32

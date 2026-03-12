@@ -24,7 +24,7 @@ from timm.utils.model import unwrap_model, get_state_dict
 from common.utils import LOGGER
 
 
-class CheckpointSaver:  # don't save optimizer state dict, since it forces specific repo sturcture
+class CheckpointSaver:  
     def __init__(
             self,
             model,
@@ -107,7 +107,7 @@ class CheckpointSaver:  # don't save optimizer state dict, since it forces speci
             'epoch': epoch,
             'arch': type(self.model).__name__.lower(),
             'state_dict': get_state_dict(self.model, self.unwrap_fn),
-            # 'optimizer': self.optimizer.state_dict(),
+            'optimizer': self.optimizer.state_dict(),
             'version': 2,  # version < 2 incrementsf epoch before save
         }
         if self.args is not None:

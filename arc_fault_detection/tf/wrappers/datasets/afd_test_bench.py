@@ -8,7 +8,7 @@
 
 
 from common.registries.dataset_registry import DATASET_WRAPPER_REGISTRY
-from arc_fault_detection.tf.src.datasets.afd_test_bench import load_afd_test_bench
+from arc_fault_detection.tf.src.datasets.afd_test_bench import AFDTestBench
 from typing import Dict
 
 __all__ = ['get_afd_test_bench']
@@ -27,5 +27,5 @@ def get_afd_test_bench(cfg) -> Dict:
             - predict_ds (object): Prediction dataset.
     """
     
-    dataloaders = load_afd_test_bench(cfg)
+    dataloaders = AFDTestBench(cfg).load_afd_test_bench()
     return dataloaders

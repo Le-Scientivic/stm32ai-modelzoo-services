@@ -6,4 +6,6 @@
 #  * If no LICENSE file comes with this software, it is provided AS-IS.
 #  *--------------------------------------------------------------------------------------------*/
 
-from .predict import predict
+from .keras_predictor import AFDKerasPredictor
+from .tflite_predictor import AFDTFLitePredictor
+from .onnx_predictor import AFDONNXPredictor

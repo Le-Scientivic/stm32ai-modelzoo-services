@@ -16,7 +16,7 @@ Depending on the model format you have, you can use the operation modes below:
 For any details regarding the parameters of the config file, you can look here:
 
 - [Quantization documentation](../README_QUANTIZATION.md)
-- [Benchmark documentation](../README_OVERVIEW.md)
+- [Benchmark documentation](../README_BENCHMARKING.md)
 
 
 ## User_config.yaml:

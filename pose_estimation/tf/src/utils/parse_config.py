@@ -243,7 +243,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
             _parse_data_augmentation_section(cfg)
         if cfg.model.framework == "tf":
             legal = ["batch_size", "epochs", "optimizer", "dropout", "frozen_layers",
-                 "resume_training_from","callbacks", "dryrun", 'trainer_name']
+                 "callbacks", "dryrun", 'trainer_name']
         cfg.training.trainer_name = "pe_trainer"
         parse_training_section(cfg.training,
                                legal=legal)

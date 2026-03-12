@@ -40,8 +40,7 @@ def preprocess(cfg: DictConfig = None) -> Tuple:
         # We are running a training using the 'training' section of the config file.
         if cfg.model.model_name:
             input_shape = cfg.model.input_shape
-        else:
-            _, input_shape = get_model_name_and_its_input_shape(cfg.training.resume_training_from)
+        
 
     image_size = (input_shape[1:] if cfg.model.model_path and cfg.model.model_path.split('.')[-1] == 'onnx' 
                   else input_shape[:2])

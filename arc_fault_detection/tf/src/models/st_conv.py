@@ -10,7 +10,17 @@
 from tensorflow import keras
 from tensorflow.keras import layers
 
-def get_st_conv(input_shape: tuple[int] = (4,256, 1), num_classes: int = 2, **kwargs):
+def get_st_conv(input_shape: tuple[int] = (4,256, 1), num_classes: int = 2):
+    """
+    Build the convolutional Arc Fault Detection model.
+
+    Args:
+        input_shape (tuple[int]): Model input shape (channels, length, 1).
+        num_classes (int): Number of output classes.
+
+    Returns:
+        keras.Model: The constructed Keras model.
+    """
 
     inputs = keras.Input(shape=input_shape)  # (batch, n_channels, seq, 1)
     x = inputs

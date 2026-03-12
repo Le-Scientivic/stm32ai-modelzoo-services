@@ -336,7 +336,7 @@ You may want to resume a training that you interrupted or that crashed.
 
 When running a training, the model is saved at the end of each epoch in the **'saved_models'** directory that is under the experiment directory. The model file is named 'last_augmented_model.keras'.
 
-To resume a training, you first need to choose the experiment you want to restart from. Then, set the `resume_training_from` attribute of the `training` section has to be set to True and the `model_path` attribute of the `model` section must contain the path to the 'last_augmented_model.keras' file of the experiment. An example is shown below.
+To resume a training, you first need to choose the experiment you want to restart from. Then, set the `resume_training` attribute of the `training` section has to be set to True and the `model_path` attribute of the `model` section must contain the path to the 'last_augmented_model.keras' file of the experiment. An example is shown below.
 
 ```yaml
 operation_mode: training
@@ -364,7 +364,7 @@ training:
          monitor: val_accuracy
          factor: 0.1
          patience: 10
-   resume_training_from: True
+   resume_training: True
 ```
 
 The configuration file of the training you are resuming should be reused as is, the only exception being the number of epochs. If you make changes to the dropout rate, the frozen layers or the optimizer, they will be ignored and the original settings will be kept. Changes made to the batch size or the callback section will be taken into account. However, they may lead to unexpected results.

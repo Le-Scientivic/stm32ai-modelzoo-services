@@ -9,6 +9,10 @@
 __all__ = [
     "models",
     "datasets",
+    "quantization",
+    "training",
+    "evaluation",
+    "prediction",
 ]
 
 

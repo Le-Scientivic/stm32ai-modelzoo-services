@@ -17,6 +17,9 @@ from common.training import plot_learning_rate_schedule
 
 
 def main():
+    """
+    Parse CLI arguments and generate the learning rate schedule plot.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-path', type=str, default='', help='Path to folder containing the configuration file')
     parser.add_argument('--config-name', type=str, default='user_config.yaml', help='Name of the configuration file')

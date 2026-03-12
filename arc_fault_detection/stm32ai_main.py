@@ -23,14 +23,10 @@ from clearml.backend_config.defs import get_active_config_file
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from api import get_model, get_dataloaders
+from api import get_model, get_dataloaders, get_quantizer, get_trainer, get_evaluator, get_predictor
 from common.utils import mlflow_ini, set_gpu_memory_limit, get_random_seed, display_figures, log_to_file
 from common.benchmarking import benchmark, cloud_connect
 from arc_fault_detection.tf.src.utils import get_config
-from arc_fault_detection.tf.src.training import train
-from arc_fault_detection.tf.src.evaluation import evaluate
-from arc_fault_detection.tf.src.quantization import quantize
-from arc_fault_detection.tf.src.prediction import predict
 
 
 def _process_mode(configs: DictConfig = None) -> None:
@@ -54,21 +50,33 @@ def _process_mode(configs: DictConfig = None) -> None:
     dataloaders = get_dataloaders(cfg=configs)
     # Check the selected mode and perform the corresponding operation
     if mode == 'training':
-        train(cfg=configs, model=model, dataloaders=dataloaders)
+        configs.training.trainer_name = 'afd_trainer'
+        trainer = get_trainer(cfg=configs,
+                              model=model,
+                              dataloaders=dataloaders)
+        trainer.train()
         display_figures(configs)
         print('[INFO] : Training complete.')
     elif mode == 'evaluation':
-        evaluate(cfg=configs, model_to_evaluate=model, dataloaders=dataloaders)
+        evaluator = get_evaluator(cfg=configs,
+                                  model=model,
+                                  dataloaders=dataloaders)
+        evaluator.evaluate()
         display_figures(configs)
         print('[INFO] : Evaluation complete.')
     elif mode == 'benchmarking':
         benchmark(cfg=configs, model_path_to_benchmark=model.model_path)
-        print('[INFO] : Benchmark complete.')
     elif mode == 'quantization':
-        quantize(cfg=configs, float_model=model, dataloaders=dataloaders)
+        quantizer = get_quantizer(cfg=configs,
+                                  model=model,
+                                  dataloaders=dataloaders)
+        quantized_model = quantizer.quantize()
         print('[INFO] : Quantization complete.')
     elif mode == "prediction":
-        predict(cfg=configs, dataloaders=dataloaders)
+        predictor = get_predictor(cfg=configs,
+                                  model=model,
+                                  dataloaders=dataloaders)
+        predictor.predict()
         print('[INFO] : Prediction complete.')
     elif mode == 'chain_tb':
         chain_tb(cfg=configs, model=model, dataloaders=dataloaders)
@@ -124,11 +132,13 @@ def chain_tb(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders: 
     credentials = None
     if cfg.tools and cfg.tools.stedgeai and cfg.tools.stedgeai.on_cloud:
         _, _, credentials = cloud_connect(stedgeai_core_version=cfg.tools.stedgeai.version)
-
-    trained_model = train(cfg=cfg, model=model, dataloaders=dataloaders)
+    cfg.training.trainer_name = 'afd_trainer'
+    trainer = get_trainer(cfg=cfg,
+                          model=model,
+                          dataloaders=dataloaders)
+    trained_model = trainer.train()
     print('[INFO] : Training complete.')
     benchmark(cfg=cfg, model_path_to_benchmark=trained_model.model_path, credentials=credentials)
-    print('[INFO] : benchmarking complete.')
     
 
 def chain_tbqeb(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders: dict = None):
@@ -150,18 +160,25 @@ def chain_tbqeb(cfg: DictConfig = None, model: tf.keras.Model = None, dataloader
     if cfg.tools and cfg.tools.stedgeai and cfg.tools.stedgeai.on_cloud:
         _, _, credentials = cloud_connect(stedgeai_core_version=cfg.tools.stedgeai.version)
 
-    trained_model = train(cfg=cfg, model=model, dataloaders=dataloaders)
+    cfg.training.trainer_name = 'afd_trainer'
+    trainer = get_trainer(cfg=cfg,
+                          model=model,
+                          dataloaders=dataloaders)
+    trained_model = trainer.train()
     print('[INFO] : Training complete.')
     benchmark(cfg=cfg, model_path_to_benchmark=trained_model.model_path, credentials=credentials)
-    print('[INFO] : benchmarking complete.')
-    quantized_model = quantize(cfg=cfg, float_model=trained_model, dataloaders=dataloaders)
+    quantizer = get_quantizer(cfg=cfg,
+                              model=trained_model,
+                              dataloaders=dataloaders)
+    quantized_model = quantizer.quantize()
     print('[INFO] : Quantization complete.')
-    evaluate(cfg=cfg, model_to_evaluate=quantized_model, dataloaders=dataloaders)
+    evaluator = get_evaluator(cfg=cfg,
+                              model=quantized_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')    
     display_figures(cfg)
     benchmark(cfg=cfg, model_path_to_benchmark=quantized_model.model_path, credentials=credentials)
-    print('[INFO] : Benchmarking complete.')
-
 
 def chain_tqe(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders: dict = None) -> None:
     """
@@ -177,11 +194,21 @@ def chain_tqe(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders:
     """
 
     print('[INFO] : Running chain_tqe')
-    trained_model = train(cfg=cfg, model=model, dataloaders=dataloaders)
+    cfg.training.trainer_name = 'afd_trainer'
+    trainer = get_trainer(cfg=cfg,
+                          model=model,
+                          dataloaders=dataloaders)
+    trained_model = trainer.train()
     print('[INFO] : Training complete.')
-    quantized_model = quantize(cfg=cfg,  float_model=trained_model, dataloaders=dataloaders)
+    quantizer = get_quantizer(cfg=cfg,
+                              model=trained_model,
+                              dataloaders=dataloaders)
+    quantized_model = quantizer.quantize()
     print('[INFO] : Quantization complete.')
-    evaluate(cfg=cfg,  model_to_evaluate=quantized_model, dataloaders=dataloaders)
+    evaluator = get_evaluator(cfg=cfg,
+                              model=quantized_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')
     display_figures(cfg)
 
@@ -200,11 +227,20 @@ def chain_eqe(cfg: DictConfig = None, float_model = None, dataloaders: dict = No
     """
 
     print('[INFO] : Running chain_eqe')
-    evaluate(cfg=cfg, model_to_evaluate=float_model, dataloaders=dataloaders)
+    evaluator = get_evaluator(cfg=cfg,
+                              model=float_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')
-    quantized_model = quantize(cfg=cfg, float_model=float_model, dataloaders=dataloaders)
+    quantizer = get_quantizer(cfg=cfg,
+                              model=float_model,
+                              dataloaders=dataloaders)
+    quantized_model = quantizer.quantize()
     print('[INFO] : Quantization complete.')
-    evaluate(cfg=cfg, model_to_evaluate=quantized_model, dataloaders=dataloaders)       
+    evaluator = get_evaluator(cfg=cfg,
+                              model=quantized_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')
     display_figures(cfg)
 
@@ -228,10 +264,12 @@ def chain_qb(cfg: DictConfig = None, float_model = None, dataloaders: dict = Non
     if cfg.tools and cfg.tools.stedgeai and cfg.tools.stedgeai.on_cloud:
         _, _, credentials = cloud_connect(stedgeai_core_version=cfg.tools.stedgeai.version)
 
-    quantized_model = quantize(cfg=cfg, float_model=float_model, dataloaders=dataloaders)
+    quantizer = get_quantizer(cfg=cfg,
+                              model=float_model,
+                              dataloaders=dataloaders)
+    quantized_model = quantizer.quantize()
     print('[INFO] : Quantization complete.')
     benchmark(cfg=cfg, model_path_to_benchmark=quantized_model.model_path, credentials=credentials)
-    print('[INFO] : Benchmarking complete.')
 
 
 def chain_eqeb(cfg: DictConfig = None, float_model = None, dataloaders: dict = None) -> None:
@@ -253,16 +291,24 @@ def chain_eqeb(cfg: DictConfig = None, float_model = None, dataloaders: dict = N
     if cfg.tools and cfg.tools.stedgeai and cfg.tools.stedgeai.on_cloud:
         _, _, credentials = cloud_connect(stedgeai_core_version=cfg.tools.stedgeai.version)
 
-    evaluate(cfg=cfg,  model_to_evaluate=float_model, dataloaders=dataloaders)
+    evaluator = get_evaluator(cfg=cfg,
+                              model=float_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')
     display_figures(cfg)
-    quantized_model = quantize(cfg=cfg, float_model=float_model, dataloaders=dataloaders)
+    quantizer = get_quantizer(cfg=cfg,
+                              model=float_model,
+                              dataloaders=dataloaders)
+    quantized_model = quantizer.quantize()
     print('[INFO] : Quantization complete.')
-    evaluate(cfg=cfg,  model_to_evaluate=quantized_model, dataloaders=dataloaders)
+    evaluator = get_evaluator(cfg=cfg,
+                              model=quantized_model,
+                              dataloaders=dataloaders)
+    evaluator.evaluate()
     print('[INFO] : Evaluation complete.')
     display_figures(cfg)
     benchmark(cfg=cfg, model_path_to_benchmark=quantized_model.model_path, credentials=credentials)
-    print('[INFO] : Benchmarking complete.')
 
 
 @hydra.main(version_base=None, config_path="", config_name="user_config")

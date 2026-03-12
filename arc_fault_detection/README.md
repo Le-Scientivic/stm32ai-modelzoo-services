@@ -3,7 +3,8 @@
 ## Directory components:
 * [datasets](docs/README_DATASETS.md) placeholder for the arc fault detection datasets.
 * [docs](docs/) contains all readmes and documentation specific to the arc fault detection use case.
-* [tf/src](tf/src/) contains tools to train, evaluate, benchmark and quantize your model on your STM32 target.
+* [config_file_examples](./config_file_examples/) contains YAML configuration file examples. It's a good place to get started if you are lost.
+* [tf/src](tf/src/) contains tools to train, evaluate and quantize your model on your STM32 target.
 
 ## Tutorials and documentation: 
 * [Complete AFD model zoo and configuration file documentation](docs/README_OVERVIEW.md)

@@ -245,7 +245,7 @@ And open the given IP address provided in your browser.
 
 You may want to continue training your own model on a new dataset rather than training your model from scratch.
 
-This can be done using the `model_path` attribute of the `model:` section to provide the path to the model file to use as illustrated in the example below.
+This can be done using the `model_path` attribute of the `model:` section to provide the path to the `.keras` model file to use as illustrated in the example below.
 
 ```yaml
 model:
@@ -261,6 +261,7 @@ dataset:
    test_path: <test-set-root-directory>            # Path to the root directory of the test set.
 
 training:
+   #resume_training: True
    batch_size: 32
    epochs: 150
    dropout: 0.3
@@ -275,7 +276,10 @@ training:
          patience: 10
 ```
 
-The model file must be a Keras model file with a `.keras` filename extension.
+If your training was interrupted or crashed, you can easily resume it. At the end of each epoch, the current model state is saved in the `tf/src/experiments_outputs/<date-and-time>/saved_models` directory as `last_augmented_model.keras`.
+
+To continue training from where it left off, select the experiment you want to resume, set the `resume_training` attribute in the `training` section to **True**, and set the `model_path` in the `model` section to the corresponding `last_augmented_model.keras` file.
+
 
 The rest of the `model` section is not present as we are not training a model from the scratch. An error will be thrown if it is present when `model_path` is set. Which may include the `model_name` and `input_shape` attributes.
 

@@ -376,7 +376,7 @@ model:
   model_path: <path-to-a-Keras-model-file>
 ```
 
-
+You may want to resume a training that you interrupted or that crashed. To resume a training, you first need to choose the experiment you want to restart from. Then, set the `model_path` attribute of the 'model' section to the path to the 'last_model.keras' file of the experiment. 
 </details></ul>
 
 <ul><details open><summary><a href="#5.2.3">5.2.3 Freezing layers</a></summary><a id="5.2.3"></a>

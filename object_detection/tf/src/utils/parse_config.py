@@ -438,7 +438,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
     print(f"[INFO] : Running `{cfg.operation_mode}` operation mode")
     cfg.use_case = "object_detection"
     if cfg.model:
-        legal = ["framework", "model_path", "resume_training_from", "model_name", "pretrained", "input_shape",
+        legal = ["framework", "model_path", "model_name", "pretrained", "input_shape",
                  "depth_mul", "width_mul", "model_type"]
         
         legal_pt = ["pretrained_dataset", "pretrained_input_shape", "depthwise", "num_classes", "depth", "width", "act", "in_channels", 
@@ -456,7 +456,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
             "display_figures", "global_seed", "gpu_memory_limit", "num_threads_tflite"]
     
     legal_pt = [
-    "saved_models_dir", "resume_training_from","start_epoch",
+    "saved_models_dir", "resume_training","start_epoch",
     "fp16","occupy","logger","global_seed"]
     
     legal = legal + legal_pt

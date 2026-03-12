@@ -67,9 +67,9 @@ data_augmentation:    # Optional section
 
 training:
   frozen_layers: None  #(0:-1)            # Optional, use if you want to freeze some layers (by default all layers are trainable)
-  resume_training_from:  # True when the model_path points on latent model under training like : experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.keras
+  resume_training:  # True when the model_path points on latent model under training like : experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.keras
                          # False (default) in normal case
-  dropout: 0.6                    # Optional, use it if you want a dropout layer to be included in the model
+  dropout: 0.6                   
   batch_size: 24
   epochs: 2
   optimizer:

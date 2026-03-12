@@ -90,6 +90,7 @@ data_dir/
 
 ### Notes
 
+- This dataset can be automatically downloaded if you set `data_download`: `True` in the dataset section.
 - `jpg/` contains **all images** in a single directory (no class subfolders).
 - `imagelabels.mat` maps each image index to a **class label (1–102)**.
 - `setid.mat` defines the **train / validation / test splits**.
@@ -122,6 +123,7 @@ data_dir/
 
 ### Notes
 
+- This dataset can be automatically downloaded if you set `data_download`: `True` in the dataset section.
 - `images/` contains **one folder per class** (101 food categories).
 - Each class folder contains **all images** for that category.
 - `meta/classes.txt` lists all **class names**.
@@ -207,27 +209,9 @@ general:
   project_name: 'pt_imagenet'        # Name of the project (used for logging, checkpoints, runs)
   output: ''                         # Output directory for experiment artifacts (empty = default)
   saved_models_dir: saved_models     # Directory where model checkpoints will be saved
-  display_figures: False             # Whether to display plots/figures during training
   seed: 42                           # Random seed for reproducibility
   gpu_memory_limit: 3                # GPU memory limit in GB (0 or unset = no limit)
-  workers: 4                         # Number of data loader worker processes
-  log_interval: 50                   # Logging frequency (in training iterations)
-  recovery_interval: 0               # Interval for recovery checkpoints (0 = disabled)
-  checkpoint_hist: 10                # Number of past checkpoints to keep
-  save_images: False                 # Whether to save sample images during training/evaluation
-  amp: false                         # Enable Automatic Mixed Precision (AMP)
-  amp_dtype: "float16"               # AMP data type (e.g., float16, bfloat16)
-  amp_impl: "native"                 # AMP implementation ("native" = PyTorch autocast)
-  no_ddp_bb: false                   # Disable DDP backbone wrapping (for distributed training)
-  synchronize_step: false            # Synchronize GPU operations every step (debug/perf impact)
-  pin_mem: false                     # Enable pinned memory for DataLoader (faster host→GPU transfer)
-  no_prefetcher: true                # Disable data prefetcher (use standard DataLoader)
-  eval_metric: "top1"                # Primary evaluation metric (e.g., top1, top5)
-  tta: 0                             # Test-time augmentation factor (0 = disabled)
-  local_rank: 0                      # Local GPU rank for distributed training
-  use_multi_epochs_loader: false     # Use multi-epoch DataLoader to reduce startup overhead
-  log_wandb: false                   # Enable logging to Weights & Biases
-  log_tb: false                      # Enable logging to TensorBoard
+  display_figures: False             # Whether to display plots/figures during training
 ```
 The general section defines global settings that control experiment setup, hardware usage, logging, checkpointing, and runtime behavior during training and evaluation.
 
@@ -235,45 +219,10 @@ By default the checkpoints,onnx model, training summary and tensorboard logs wil
 
 `seed` is Random seed for reproducible training runs. This attribute is optional, with a default value of 42.
 
-`display_figures` is currently not in use.
-
 `gpu_memory_limit` is currently not in use.
 
-`workers` is number of worker processes used by the data loader.
+`display_figures` is a Boolean flag that, when true, shows interactive figures you must interact with to continue the process.
 
-`pin_mem` is Enables pinned memory for faster CPU → GPU data transfer.
-
-`no_prefetcher` disables the data prefetcher and uses the standard PyTorch DataLoader.
-
-`use_multi_epochs_loader` uses a multi-epoch DataLoader to reduce worker startup overhead.
-
-`synchronize_step` forces GPU synchronization at every step (useful for debugging; may impact performance).
-
-`log_interval` Logging frequency measured in training iterations.
-
-`log_wandb` Enables logging to Weights & Biases.
-
-`log_tb` Enables logging to TensorBoard.
-
-`eval_metric` Primary evaluation metric (e.g., top1, top5, loss).
-
-`recovery_interval` Interval for saving recovery checkpoints. Set to 0 to disable.
-
-`checkpoint_hist` Number of historical checkpoints to retain.
-
-`save_images` Whether to save sample images during training or evaluation.
-
-`amp` Enables Automatic Mixed Precision (AMP) for faster training and lower memory usage.
-
-`amp_dtype` Data type used for AMP (e.g., float16, bfloat16).
-
-`amp_impl` AMP backend implementation (native uses PyTorch autocast).
-
-`no_ddp_bb` Disables Distributed Data Parallel (DDP) wrapping for the model backbone.
-
-`local_rank` Local GPU rank used in distributed training setups.
-
-`tta` Test-time augmentation factor. Set to 0 to disable TTA.
 
 </details></ul>
 <ul><details open><summary><a href="#2-3">2.3 Model specifications</a></summary><a id="2-3"></a>
@@ -330,6 +279,12 @@ dataset:
   quantization_split: 0.01                     # Fraction of data used for quantization calibration
   test_path: ""                                # Optional test dataset path for evaluation (defaults to validation data)
   quantization_path: ""                        # Optional quantization dataset path (defaults to training data)
+  workers: 4                                   # Number of data loader worker processes
+  worker_seeding: all
+  pin_mem: false                               # Enable pinned memory for DataLoader (faster host→GPU transfer)
+  no_prefetcher: true                          # Disable data prefetcher (use standard DataLoader)
+  use_multi_epochs_loader: false               # Use multi-epoch DataLoader to reduce startup overhead
+  #data_download: True                         # Valid for food101 and flowers102 datasets.
 ```
 
 
@@ -340,6 +295,16 @@ The `class_names` attribute specifies the classes in the dataset. This informati
 `train_split` and `val_split` are optional variables just for the `imagenet` dataset. Useful in scenarios when your training and validation folders are renamed to something other than "train" and "val". The standard ImageNet dataset has "train" and "val" folders inside the "imagenet" directory.
 
 The `quantization_path` attribute is used to specify a dataset for the quantization process. If this attribute is not provided and a training set is available, the training set is used for the quantization. However, training sets can be quite large, and the quantization process can take a long time to run. To avoid this issue, you can set the `quantization_split` attribute to use only a portion of the dataset for quantization.
+
+`workers` is number of worker processes used by the data loader.
+
+`pin_mem` is Enables pinned memory for faster CPU → GPU data transfer.
+
+`no_prefetcher` disables the data prefetcher and uses the standard PyTorch DataLoader.
+
+`use_multi_epochs_loader` uses a multi-epoch DataLoader to reduce worker startup overhead.
+
+`data_download` if set to True it will download the dataset. Only valid for `flowers102` and `food101` dataset.
 
 </details></ul>
 
@@ -376,6 +341,11 @@ dataset:
   quantization_split: 0.01                     # Fraction of data used for quantization calibration
   test_path: ""                                # Optional test dataset path for evaluation (defaults to validation data)
   quantization_path: ""                        # Optional quantization dataset path (defaults to training data)
+  workers: 4                                   # Number of data loader worker processes
+  worker_seeding: all
+  pin_mem: false                               # Enable pinned memory for DataLoader (faster host→GPU transfer)
+  no_prefetcher: true                          # Disable data prefetcher (use standard DataLoader)
+  use_multi_epochs_loader: false               # Use multi-epoch DataLoader to reduce startup overhead
 ```
 
 Three variables that are important for custom dataset: `dataset_name`, `training_path`, and `validation_path`. </details></ul>
@@ -386,35 +356,31 @@ Three variables that are important for custom dataset: `dataset_name`, `training
 Images need to be rescaled and resized before they can be used. This is specified in the 'preprocessing' section that is required in all the operation modes.
 
 The 'preprocessing' section for this tutorial is shown below.
-**Note:** Only `mean` and `std` are being used in torch image classification. All other values like `scale`, `offset`, `interpolation`, `aspect_ratio`, and `color_mode` will not have any impact on the training.
+**Note:** Only `mean` and `std` are being used in torch image classification. All other values like `scale`, `offset`, `aspect_ratio`, and `color_mode` will not have any impact on the training.
 
 ```yaml
 preprocessing: 
-  rescaling:
-    scale: 1/255.0 
-    offset: 0
+  rescaling: # Not used for Torch Image Classification
+    scale: None # Not used for Torch Image Classification
+    offset: None # Not used for Torch Image Classification
   resizing:
-    interpolation: nearest # nearest 'Image resize interpolation type (overrides model)'
-    aspect_ratio: fit
-  color_mode: rgb
-  mean: [0.485, 0.456, 0.406] # 'Override mean pixel value of dataset'
-  std: [0.229, 0.224, 0.225] # 'Override std deviation of dataset'
+    interpolation: random # 'random' means random.choice(["bilinear", "bicubic"]). This will be used for training data and bilinear is fixed for test data 
+    aspect_ratio: fit # Not used for Torch Image Classification
+  color_mode: rgb # Not used for Torch Image Classification
+  normalization:
+    mean: [0.485, 0.456, 0.406] # Subtracted from each channel: (x - mean) / std
+    std: [0.229, 0.224, 0.225] # Divides each channel after mean subtraction
 ```
 
-Images are rescaled using the formula "Out = scale\*In + offset". Pixel values of input images usually are integers in the interval [0, 255]. If you set *scale* to 1./255 and offset to 0, pixel values are rescaled to the interval [0.0, 1.0]. This is the fixed setup for now. For future: If you set *scale* to 1/127.5 and *offset* to -1, they are rescaled to the interval [-1.0, 1.0].
+The `preprocessing` section defines how images are prepared before being given to the model. It controls resizing behavior and pixel value normalization so that inputs match what the model expects.
 
-The resizing interpolation methods that are supported include 'bilinear', 'nearest', 'bicubic' and 'random'.
+The `rescaling` block is present but not used for Torch Image Classification. Both `scale` and `offset` are set to `None`, so no linear rescaling is applied to pixel values.
 
-The `aspect_ratio` attribute may be set to either:
-- 'fit', images will be fit to the target size. Input images may be smaller or larger than the target size. They will be distorted to some extent if their original aspect ratio is not the same as the resizing aspect ratio.
-- 'crop', images will be cropped to preserve the aspect ratio. The input images should be larger than the target size to use this mode.
-- 'padding', images will be padded with zeros (black borders) to meet the target size. The input images should be smaller than the target size to use this mode.
+The `resizing` block specifies how images are resized. The `interpolation` method is set to `random`, which means that for training data the interpolation is randomly chosen between `bilinear` and `bicubic`, while for test data `bilinear` interpolation is always used. The `aspect_ratio` option is set to `fit`, but it is not used for Torch Image Classification.
 
-If some images in your dataset are larger than the resizing size and some others are smaller, you will obtain a mix of cropped and padded images if you set `aspect_ratio` to 'crop' or 'padding'.
+The `color_mode` is set to `rgb`, indicating three-channel RGB images. This option is also not used for Torch Image Classification.
 
-The `color_mode` attribute can be set to either *"grayscale"*, *"rgb"*, or *"rgba"*.
-
-The `mean` and `std` attribute can be provided to for normalize the data for training. Default value of mean and std is used from imagenet dataset and this can be (and recommended to) changed for custom dataset by calculating mean and std. 
+The `normalization` block defines per-channel normalization using fixed `mean` and standard deviation values. Each pixel is normalized using the formula (x - `mean`) / `std`. The provided mean and standard deviation values correspond to ImageNet statistics and are applied in RGB channel order.
 
 
 </details></ul>
@@ -427,7 +393,7 @@ For this tutorial, the data augmentation section is shown below.
 ```yaml
 data_augmentation:
   no_aug: False  
-  scale: [0.08, 1.0]
+  crop_range: [0.08, 1.0]
   ratio: [0.75, 1.33]
   horizontal_flip: 0.5
   vertical_flip: 0.0
@@ -510,8 +476,6 @@ The data augmentation functions with their parameter settings are applied to the
 
 `smoothing` – Label smoothing factor applied to training targets.
 
-`train_interpolation` – Interpolation method used during image resizing for training.
-
 `drop` – Standard dropout rate applied during training.
 
 `drop_connect` – DropConnect rate for randomly dropping network connections.
@@ -533,12 +497,13 @@ training:
   epochs: 2
   batch_size: 128
   validation_batch_size: null
+  resume_training_from: null              # checkpoint path to resume training
   optimizer:
     opt: 'sgd' 
     opt-eps: null 
     opt-betas: null 
     momentum: 0.9
-    weight_decay: !!float 2e-5
+    weight_decay: 0.00002
     clip_grad: null
     clip_mode: 'norm'
     layer_decay: null
@@ -556,7 +521,7 @@ training:
     lr_cycle_decay: 0.5
     lr_cycle_limit: 1
     lr_k_decay: 1.0
-    warmup_lr: !!float 1e-5
+    warmup_lr: 0.00001
     min_lr: 0
     epoch_repeats: 0
     start_epoch: 0
@@ -575,7 +540,19 @@ training:
   model_ema: false
   model_ema_force_cpu: false
   model_ema_decay: 0.9998
-  worker_seeding: all
+  log_wandb: false                   # Enable logging to Weights & Biases
+  log_tb: false                      # Enable logging to TensorBoard
+  log_interval: 50                   # Logging frequency (in training iterations)
+  recovery_interval: 0               # Interval for recovery checkpoints (0 = disabled)
+  checkpoint_hist: 10                # Number of past checkpoints to keep
+  save_images: False                 # Whether to save sample images during training/evaluation
+  amp: false                         # Enable Automatic Mixed Precision (AMP)
+  amp_dtype: "float16"               # AMP data type (e.g., float16, bfloat16)
+  amp_impl: "native"                 # AMP implementation ("native" = PyTorch autocast)
+  tta: 0                             # Test-time augmentation factor (0 = disabled)
+  eval_metric: "top1"                # Primary evaluation metric (e.g., top1, top5)
+  no_ddp_bb: false                   # Disable DDP backbone wrapping (for distributed training)
+  synchronize_step: false            # Synchronize GPU operations every step (debug/perf impact)
 ```
 
 This section controls training duration, optimization strategy, learning rate scheduling, normalization behavior, and stability mechanisms such as EMA and gradient clipping.
@@ -586,6 +563,8 @@ The `batch_size` and `epochs` attributes are mandatory. All the others are optio
 `batch_size` – Number of samples processed per training iteration.
 
 `validation_batch_size` – Batch size used during validation (defaults to training batch size if null).
+
+`resume_training_from` - is set to specify a checkpoint path for resuming training. This can be used if your training ends abruptly and you want to continue training from a specific checkpoints.  
 
 `optimizer.opt` – Optimizer type used for training (e.g., sgd, adam, adamw).
 
@@ -663,7 +642,31 @@ The `batch_size` and `epochs` attributes are mandatory. All the others are optio
 
 `model_ema_decay` – Decay rate controlling how fast EMA weights update.
 
-`worker_seeding` – Strategy for seeding data loader workers to ensure reproducibility.
+`synchronize_step` forces GPU synchronization at every step (useful for debugging; may impact performance).
+
+`log_interval` Logging frequency measured in training iterations.
+
+`log_wandb` Enables logging to Weights & Biases.
+
+`log_tb` Enables logging to TensorBoard.
+
+`eval_metric` Primary evaluation metric (e.g., top1, top5, loss).
+
+`recovery_interval` Interval for saving recovery checkpoints. Set to 0 to disable.
+
+`checkpoint_hist` Number of historical checkpoints to retain.
+
+`save_images` Whether to save sample images during training or evaluation.
+
+`amp` Enables Automatic Mixed Precision (AMP) for faster training and lower memory usage.
+
+`amp_dtype` Data type used for AMP (e.g., float16, bfloat16).
+
+`amp_impl` AMP backend implementation (native uses PyTorch autocast).
+
+`no_ddp_bb` Disables Distributed Data Parallel (DDP) wrapping for the model backbone.
+
+`tta` Test-time augmentation factor. Set to 0 to disable TTA.
 
 The best model obtained at the end of the training is saved in the `experiments_outputs/<date-and-time>/saved_models` directory.
 

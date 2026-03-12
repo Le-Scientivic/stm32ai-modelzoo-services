@@ -20,6 +20,7 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 import tensorflow as tf
 import torch
+from torch import distributed as dist
 from omegaconf import DictConfig
 import mlflow
 import argparse
@@ -83,11 +84,14 @@ def _process_mode(cfg: DictConfig = None) -> None:
                               model=model, 
                               dataloaders=dataloaders)
         trained_model = trainer.train()
-        display_figures(cfg)
-        evaluator = get_evaluator(cfg=cfg, 
-                                  model=trained_model, 
-                                  dataloaders=dataloaders)
-        acc = evaluator.evaluate()
+        # Only zero rank returns valid model incase of multi gpu
+        # All the other ranks retunrn None
+        if trained_model is not None: 
+            display_figures(cfg)
+            evaluator = get_evaluator(cfg=cfg, 
+                                    model=trained_model, 
+                                    dataloaders=dataloaders)
+            acc = evaluator.evaluate()
     elif mode == 'evaluation':
         gen_load_val(cfg=cfg, model=model)
         os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -331,8 +335,9 @@ def main(cfg: DictConfig) -> None:
 
     # Executes the required service
     _process_mode(cfg=cfg)
-
-
+    
+    if cfg.model.framework == "torch" and cfg.distributed:
+        dist.destroy_process_group()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

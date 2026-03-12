@@ -36,67 +36,6 @@ from re_identification.tf.src.evaluation import evaluate_h5_model, evaluate_h5_m
 
 
 
-def _load_model_to_train(cfg, model_path=None, num_classes=None) -> tf.keras.Model:
-    """
-    This function loads the model to train, which can be either a:
-    - model from the zoo (MobileNet, FD-MobileNet, etc).
-    - .h5 or .keras model
-    - .h5 or .keras model with preprocessing layers included if the training
-      is being resumed.
-    These 3 different cases are mutually exclusive.
-
-    Arguments:
-        cfg (DictConfig): a dictionary containing the 'training' section 
-                          of the configuration file.
-        model_path (str): a path to a .h5 or .keras file provided using the 
-                          'model.model_path' attribute.
-
-    Return:
-        tf.keras.Model: a keras model.
-    """
-    
-    if cfg.model:
-        # Model from the zoo
-        model = get_model(
-            cfg=cfg.model,
-            num_classes=num_classes,
-            dropout=cfg.dropout,
-            section="training.model")
-        input_shape = cfg.model.input_shape
-
-    elif model_path:
-        # User model (h5 or keras file)
-        model = tf.keras.models.load_model(model_path)
-        model = change_model_number_of_classes(model, num_classes)
-        input_shape = tuple(model.input.shape[1:])
-
-    elif cfg.resume_training_from:
-        # Model saved during a previous training 
-        model = tf.keras.models.load_model(
-                        cfg.resume_training_from,
-                        custom_objects={
-                            'DataAugmentationLayer': DataAugmentationLayer
-                        })
-        input_shape = tuple(model.input.shape[1:])
-
-        # Check that the model includes the preprocessing layers
-        expected = False
-        if len(model.layers) == 2:
-            if model.layers[0].__class__.__name__ == "Rescaling":
-                expected = True
-        elif len(model.layers) == 3:
-            if model.layers[0].__class__.__name__ == "Rescaling" and \
-               model.layers[1].__class__.__name__ == "DataAugmentationLayer":
-                expected = True
-        if not expected:
-            raise RuntimeError("\nThe model does not include preprocessing layers (rescaling, data augmentation).\n"
-                               f"Received model path: {cfg.resume_training_from}\nTraining can only be resumed from "
-                               "the 'best_augmented_model.h5(.keras)' or 'last_augmented_model.h5(.keras)' model files\nsaved in "
-                               "the 'saved_models_dir' directory during a previous training run.")
-    else:
-        raise RuntimeError("\nInternal error: should have model, model_path or resume_training_from")
-    
-    return model, input_shape
 
 
 def _add_preprocessing_layers(
@@ -300,7 +239,7 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, train_ds: tf.dat
         else:
             print("[INFO] : No pretrained weights were loaded, training from randomly initialized weights.")
 
-    elif cfg.model.model_path:
+    elif cfg.model.model_path and not cfg.training.resume_training:
         print(f"[INFO] : Using model file {cfg.model.model_path}")
         log_to_file(cfg.output_dir, (f"Model file : {cfg.model.model_path}"))
         x = model.output
@@ -312,25 +251,25 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, train_ds: tf.dat
         x = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
         model = tf.keras.Model(inputs=model.input, outputs=x)
 
-    elif cfg.training.resume_training_from:
-        print(f"[INFO] : Resuming training from model file {cfg.training.resume_training_from}")
-        log_to_file(cfg.output_dir, (f"Model file : {cfg.training.resume_training_from}"))
+    elif cfg.training.resume_training and cfg.model.model_path:
+        print(f"[INFO] : Resuming training from model file {cfg.model.model_path}")
+        log_to_file(cfg.output_dir, (f"Model file : {cfg.model.model_path}"))
 
-    if cfg.dataset.name: 
-        log_to_file(output_dir, f"Dataset : {cfg.dataset.name}")
-    if not cfg.training.resume_training_from:
+    if cfg.dataset.dataset_name: 
+        log_to_file(output_dir, f"Dataset : {cfg.dataset.dataset_name}")
+    if not cfg.training.resume_training:
         #model.trainable = True
         set_all_layers_trainable_parameter(model, trainable=True)
         if cfg.training.frozen_layers:
             set_frozen_layers(model, frozen_layers=cfg.training.frozen_layers)
         if cfg.training.dropout is not None:
             set_dropout_rate(model, dropout_rate=cfg.training.dropout)
-    if cfg.training.dropout is not None and cfg.training.dropout > 0:
-        model = tf.keras.Model(inputs=model.input, outputs=[model.layers[-1].output, model.layers[-3].output]) 
-    else:
-        model = tf.keras.Model(inputs=model.input, outputs=[model.layers[-1].output, model.layers[-2].output])
+        if cfg.training.dropout is not None and cfg.training.dropout > 0:
+            model = tf.keras.Model(inputs=model.input, outputs=[model.layers[-1].output, model.layers[-3].output]) 
+        else:
+            model = tf.keras.Model(inputs=model.input, outputs=[model.layers[-1].output, model.layers[-2].output])
     # Display a summary of the model
-    if cfg.training.resume_training_from:
+    if cfg.training.resume_training:
         model_summary(model)
         if len(model.layers) == 2:
             model_summary(model.layers[1])
@@ -339,7 +278,7 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, train_ds: tf.dat
     else:
         model_summary(model)
 
-    if not cfg.training.resume_training_from:
+    if not cfg.training.resume_training:
         # Add the preprocessing layers to the model
         augmented_model = _add_preprocessing_layers(model,
                                 input_shape=input_shape,
@@ -357,6 +296,19 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, train_ds: tf.dat
         # We don't compile the model otherwise we would 
         # loose the loss and optimizer states.
         augmented_model = model
+
+        # Some saved models may not contain compile state.
+        # In that case, compile with the current training config.
+        if getattr(augmented_model, "optimizer", None) is None:
+            print("[INFO] : Loaded resumed model has no compile state. Compiling with current training settings.")
+            augmented_model.compile(
+                loss=[
+                    get_loss(num_classes),
+                    get_triplet_loss(margin=triplet_margin, mining=triplet_strategy, distance_metric=distance_metric)
+                ],
+                metrics=['accuracy', None],
+                optimizer=get_optimizer(cfg=cfg.training.optimizer)
+            )
 
     callbacks = _get_callbacks(callbacks_dict=cfg.training.callbacks,
                                 output_dir=output_dir,

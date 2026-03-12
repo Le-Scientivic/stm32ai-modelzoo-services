@@ -51,7 +51,23 @@ class MultiResCallback(tf.keras.callbacks.Callback):
         self.model.set_resolution(res)
 
 
-def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir: str = None,
+class SaveBaseModelWithWeightsCallback(tf.keras.callbacks.Callback):
+    """
+    Custom callback to save the base_model as a full Keras model when a new best is found.
+    """
+    def __init__(self, base_model, save_path, filepath=None):
+        super().__init__()
+        self.base_model = base_model
+        self.save_path = save_path
+        self.filepath = filepath
+        
+    def on_epoch_end(self, epoch, logs=None):
+        self.base_model.load_weights(self.filepath)
+        self.base_model.save(self.save_path)
+
+
+
+def _get_callbacks(callbacks_dict: DictConfig, base_model: tf.keras.Model = None, output_dir: str = None, logs_dir: str = None,
                   saved_models_dir: str = None) -> List[tf.keras.callbacks.Callback]:
     """
     This function creates the list of Keras callbacks to be passed to 
@@ -131,6 +147,21 @@ def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir:
                         save_best_only=False,save_weights_only=True,monitor="val_loss",mode="min")
     callback_list.append(callback)
 
+    # Add the custom callback to save the base_model as a full Keras model when a new best is found
+    callback = SaveBaseModelWithWeightsCallback(
+                    base_model=base_model,
+                    save_path=os.path.join(output_dir, saved_models_dir, "best_model.keras"),
+                    filepath=os.path.join(output_dir, saved_models_dir, "best_weights.weights.h5")
+                )
+    callback_list.append(callback)
+
+    # Add the custom callback to save the base_model as a full Keras model at the end of each epoch
+    callback = SaveBaseModelWithWeightsCallback(
+                    base_model=base_model,
+                    save_path=os.path.join(output_dir, saved_models_dir, "last_model.keras"),
+                    filepath=os.path.join(output_dir, saved_models_dir, "last_weights.weights.h5")
+                )
+    callback_list.append(callback)
     # Add the TensorBoard callback
     callback = LRTensorBoard(log_dir=os.path.join(output_dir, logs_dir))
     callback_list.append(callback)
@@ -240,6 +271,7 @@ class SSTrainer:
                 print("[WARNING]: 'random_periodic_resizing' can't be used because [image_sizes] argument is missing.")
         self.callbacks = _get_callbacks(
             callbacks_dict=self.cfg.training.callbacks,
+            base_model=self.base_model,
             output_dir=self.output_dir,
             logs_dir=self.cfg.general.logs_dir,
             saved_models_dir=self.saved_models_dir

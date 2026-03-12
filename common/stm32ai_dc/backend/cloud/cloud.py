@@ -38,17 +38,18 @@ class CloudBackend(Stm32AiBackend):
         self.username = username
         self.password = password
         self.version = version
-        self.supportedVersions = get_supported_versions()
+        self.supported_versions = get_supported_versions()
         self.silent = silent
         self.login_service = LoginService()
         try:
-#            user_version = next(x for x in self.supportedVersions if x.get('platform',{}).get(platform, x['version']) == version)
+#            user_version = next(x for x in self.supported_versions if x.get('platform',{}).get(platform, x['version']) == version)
 #            self.version = user_version['version']
-            self.version = self.supportedVersions['version']
+            user_version = next(x for x in self.supported_versions if x.get('version') == version)
+            self.version = user_version['version']
         except Exception as e:    
             print(
                 f'[WARN] Version {self.version} for platform {platform} is not supported by Developer Cloud.')
-            for v in self.supportedVersions:
+            for v in self.supported_versions:
                 if (v.get('isLatest', False) == True):
                     latest = v
             if (latest):

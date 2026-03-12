@@ -331,7 +331,7 @@ def get_config(config_data: DictConfig) -> DefaultMunch:
         if cfg.data_augmentation or cfg.custom_data_augmentation:
             parse_data_augmentation_section(cfg, config_dict)
         legal = ["batch_size", "epochs", "optimizer", "dropout", "frozen_layers",
-                 "callbacks", "resume_training_from", "trained_model_path", "dryrun", "triplet_loss"]
+                 "callbacks", "resume_training", "trained_model_path", "dryrun", "triplet_loss"]
         parse_training_section(cfg.training,
                                legal=legal)
 

@@ -24,7 +24,67 @@ from common.utils import log_to_file, log_last_epoch_history, LRTensorBoard, che
                          model_summary, collect_callback_args, vis_training_curves
 
 from common.training import get_optimizer, lr_schedulers
-from arc_fault_detection.tf.src.evaluation import evaluate_h5_model
+from arc_fault_detection.tf.src.evaluation import AFDKerasEvaluator
+
+
+def _get_layer_weight_shapes(layer: tf.keras.layers.Layer) -> List[Tuple[int, ...]]:
+    """
+    Return a list of weight shapes for a given Keras layer.
+
+    Args:
+        layer (tf.keras.layers.Layer): Layer to inspect.
+
+    Returns:
+        List[Tuple[int, ...]]: Weight shapes for the layer.
+    """
+    return [tuple(weight.shape) for weight in layer.weights]
+
+
+def _are_models_compatible(base_model: tf.keras.Model, resume_model: tf.keras.Model) -> Tuple[bool, str]:
+    """
+    Compare two Keras models for compatibility based on layer name/type/weight shapes.
+    """
+    if len(base_model.layers) != len(resume_model.layers):
+        return False, (
+            f"Layer count mismatch: {len(base_model.layers)} vs {len(resume_model.layers)}"
+        )
+
+    for idx, (base_layer, resume_layer) in enumerate(zip(base_model.layers, resume_model.layers)):
+        if base_layer.name != resume_layer.name:
+            return False, (
+                f"Layer name mismatch at index {idx}: {base_layer.name} vs {resume_layer.name}"
+            )
+        if base_layer.__class__.__name__ != resume_layer.__class__.__name__:
+            return False, (
+                f"Layer type mismatch at index {idx} ({base_layer.name}): "
+                f"{base_layer.__class__.__name__} vs {resume_layer.__class__.__name__}"
+            )
+        base_shapes = _get_layer_weight_shapes(base_layer)
+        resume_shapes = _get_layer_weight_shapes(resume_layer)
+        if base_shapes != resume_shapes:
+            return False, (
+                f"Weight shapes mismatch at index {idx} ({base_layer.name}): "
+                f"{base_shapes} vs {resume_shapes}"
+            )
+
+    return True, "Models are compatible."
+
+
+def _load_keras_model_for_resume(model_path: str) -> Optional[tf.keras.Model]:
+    """
+    Load a Keras model from a supported checkpoint path for resume training.
+
+    Args:
+        model_path (str): Path to a .h5 or .keras model file.
+
+    Returns:
+        Optional[tf.keras.Model]: Loaded model or None if format is unsupported.
+    """
+    file_extension = str(model_path).split('.')[-1]
+    if file_extension not in ['h5', 'keras']:
+        print(f"[WARNING] : Unsupported resume model format: {model_path}")
+        return None
+    return tf.keras.models.load_model(model_path, compile=False)
 
 def _get_callbacks(callbacks_dict: DictConfig, output_dir: str = None, logs_dir: str = None,
                   saved_models_dir: str = None) -> List[tf.keras.callbacks.Callback]:
@@ -166,33 +226,51 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders: dic
     if cfg.model.model_name:
         print(f"[INFO] : Using `{cfg.model.model_name}` model")
         log_to_file(cfg.output_dir, (f"Model name : {cfg.model.model_name}"))
-        if cfg.model.pretrained:
-            print(f"[INFO] : Initialized model with pretrained weights")
-            log_to_file(cfg.output_dir,(f"Pretrained weights"))
-        else:
+        if not cfg.training.initialize_parameters_from:
             print("[INFO] : No pretrained weights were loaded, training from randomly initialized weights.")
-    elif cfg.training.resume_training_from:
-        print(f"[INFO] : Resuming training from model file {cfg.training.resume_training_from}")
-        log_to_file(cfg.output_dir, (f"Model file : {cfg.training.resume_training_from}"))
     elif cfg.model.model_path:
         print(f"[INFO] : Loaded model file {cfg.model.model_path}")
         log_to_file(cfg.output_dir ,(f"Model file : {cfg.model.model_path}"))
+        if not cfg.training.initialize_parameters_from:
+            print("[INFO] : No resume training weights were loaded, training from model file weights.")
     if cfg.dataset.dataset_name:
         log_to_file(output_dir, f"Dataset : {cfg.dataset.dataset_name}")
 
-    # Set frozen layers
-    # NOTE : This will be added at a later point.
-    # if not cfg.training.resume_training_from:
-    #     # Set frozen layers
-    #     if not cfg.training.frozen_layers or cfg.training.frozen_layers == "None":
-    #         model.trainable = True
-    #     else:
-    #         set_frozen_layers(model, frozen_layers=cfg.training.frozen_layers)
+    # Apply resume weights if provided and compatible
+     
+    if cfg.training.initialize_parameters_from:
+        print(f"[INFO] : Resuming training from weights at {cfg.training.initialize_parameters_from}")
+        log_to_file(cfg.output_dir, (f"Resume training from : {cfg.training.initialize_parameters_from}"))
+        resume_model = _load_keras_model_for_resume(cfg.training.initialize_parameters_from)
+        if resume_model is None:
+            warning = f"Resume weights skipped: unsupported format at {cfg.training.initialize_parameters_from}"
+            print(f"[WARNING] : {warning}")
+            log_to_file(cfg.output_dir, (f"Resume weights warning : {warning}"))
+            if cfg.model.model_name:
+                print("[INFO] : Keeping randomly initialized weights.")
+            else:
+                print(f"[INFO] : Keeping weights from model file {cfg.model.model_path}")
+        else:
+            compatible, reason = _are_models_compatible(model, resume_model)
+            if compatible:
+                model.set_weights(resume_model.get_weights())
+                print(f"[INFO] : Applied resume weights from {cfg.training.initialize_parameters_from}")
+                log_to_file(cfg.output_dir, (f"Resume weights : {cfg.training.initialize_parameters_from}"))
+            else:
+                warning = f"Resume weights skipped: incompatible model architecture. {reason}"
+                print(f"[WARNING] : {warning}")
+                log_to_file(cfg.output_dir, (f"Resume weights warning : {warning}"))
+                if cfg.model.model_name:
+                    print("[INFO] : Keeping randomly initialized weights.")
+                else:
+                    print(f"[INFO] : Keeping weights from model file {cfg.model.model_path}")
+
+
 
     # Display a summary of the model
     model_summary(model)
 
-    # Compile the augmented model
+    # Compile the model
     model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
                   metrics=['accuracy'],
                   optimizer=get_optimizer(cfg=cfg.training.optimizer))
@@ -234,12 +312,12 @@ def train(cfg: DictConfig = None, model: tf.keras.Model = None, dataloaders: dic
     best_model.save(best_model_path)
     setattr(best_model, 'model_path', str(best_model_path))
 
-    # Evaluate h5 best model on the validation set
-    evaluate_h5_model(model_path=best_model_path, eval_ds=dataloaders['valid'],
-                      class_names=class_names, output_dir=output_dir, name_ds="validation_set")
+    # Evaluate keras best model on the validation set
+    validator = AFDKerasEvaluator(cfg=cfg, model=best_model, dataloaders={"valid": dataloaders['valid']})
+    validator.evaluate()
     if dataloaders.get('test'):
-        # Evaluate h5 best model on the test set
-        evaluate_h5_model(model_path=best_model_path, eval_ds=dataloaders['test'],
-                          class_names=class_names, output_dir=output_dir, name_ds="test_set")
+        # Evaluate keras best model on the test set
+        tester = AFDKerasEvaluator(cfg=cfg, model=best_model, dataloaders={"test": dataloaders['test']})
+        tester.evaluate()
 
     return best_model

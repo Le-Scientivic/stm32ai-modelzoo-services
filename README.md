@@ -598,7 +598,6 @@ Then install all required Python packages:
 pip install -r requirements.txt
 ```
 
-
 ## Initialize Git Submodules
 
 Some application code in this repository is provided as git submodules. These submodules contain essential code for specific use cases and are not included in the main repository by default. To ensure all features and application examples work correctly, you need to initialize and update the submodules after cloning the repository:
@@ -609,9 +608,6 @@ git submodule update --init --recursive
 
 This command will download all necessary submodules content, it is only needed if you plan to use deployment features.
 ## Practical Notes
-
-> [!IMPORTANT] 
-> [stm32ai-tao](https://github.com/STMicroelectronics/stm32ai-tao) is a  GitHub repository provides Python scripts and Jupyter notebooks to manage a complete life cycle of a model from training, to compression, optimization and benchmarking using **NVIDIA TAO Toolkit** and STEdgeAI Developer Cloud.
 
 > [!CAUTION]
 > If there are any white spaces in the paths (for Python, STM32CubeIDE, or STEdgeAI Core local installation), this can result in errors. Avoid having paths with white spaces.

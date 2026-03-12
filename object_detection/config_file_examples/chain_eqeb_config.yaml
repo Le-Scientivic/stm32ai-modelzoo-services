@@ -9,7 +9,6 @@ dataset:
    dataset_name: coco
    format: tfs
    class_names: [person]
-   training_path: ./datasets/od_coco_2017_person/train
    validation_path: ./datasets/od_coco_2017_person/validation
    test_path: ./datasets/od_coco_2017_person/test
    quantization_path: ./datasets/od_coco_2017_person/quantization

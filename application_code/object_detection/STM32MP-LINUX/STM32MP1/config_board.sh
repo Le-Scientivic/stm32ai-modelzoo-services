@@ -38,7 +38,7 @@ if [[ "$COMPATIBLE" == *"$STM32MP135"* ]]; then
   IMAGE_CLASSIFICATION_MODEL="mobilenet_v1_0.5_224_int8$NN_EXT"
   IMAGE_CLASSIFICATION_LABEL="labels_imagenet_2012"
   OBJ_DETEC_MODEL="st_ssd_mobilenet_v1_025_224_int8$NN_EXT"
-  OBJ_DETEC_MODEL_LABEL="labels_coco_person_dataset"
+  OBJ_DETEC_MODEL_LABEL="class_names"
 fi
 
 if [[ "$COMPATIBLE" == *"$STM32MP157"* ]]; then
@@ -52,7 +52,7 @@ if [[ "$COMPATIBLE" == *"$STM32MP157"* ]]; then
     IMAGE_CLASSIFICATION_MODEL="mobilenet_v1_0.5_224_int8$NN_EXT"
     IMAGE_CLASSIFICATION_LABEL="labels_imagenet_2012"
     OBJ_DETEC_MODEL="st_ssd_mobilenet_v1_025_224_int8$NN_EXT"
-    OBJ_DETEC_MODEL_LABEL="labels_coco_person_dataset"
+    OBJ_DETEC_MODEL_LABEL="class_names"
   else
     MACHINE=$STM32MP157
     DWIDTH=640
@@ -62,7 +62,7 @@ if [[ "$COMPATIBLE" == *"$STM32MP157"* ]]; then
     IMAGE_CLASSIFICATION_MODEL="mobilenet_v1_0.5_224_int8$NN_EXT"
     IMAGE_CLASSIFICATION_LABEL="labels_imagenet_2012"
     OBJ_DETEC_MODEL="st_ssd_mobilenet_v1_025_224_int8$NN_EXT"
-    OBJ_DETEC_MODEL_LABEL="labels_coco_person_dataset"
+    OBJ_DETEC_MODEL_LABEL="class_names"
   fi
 fi
 
@@ -78,7 +78,7 @@ if [[ "$COMPATIBLE" == *"$STM32MP2"* ]]; then
   IMAGE_CLASSIFICATION_MODEL="mobilenet_v1_0.5_224_int8$NN_EXT"
   IMAGE_CLASSIFICATION_LABEL="labels_imagenet_2012"
   OBJ_DETEC_MODEL="st_ssd_mobilenet_v1_025_224_int8$NN_EXT"
-  OBJ_DETEC_MODEL_LABEL="labels_coco_person_dataset"
+  OBJ_DETEC_MODEL_LABEL="class_names"
 fi
 
 echo "machine used = "$MACHINE

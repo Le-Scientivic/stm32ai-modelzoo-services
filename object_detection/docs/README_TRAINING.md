@@ -389,15 +389,15 @@ And open the given IP address in your browser.
 
 You may want to resume a training that you interrupted or that crashed.
 
-When running a training, the model is saved at the end of each epoch in the **'saved_models'** directory that is under the experiment directory (see section "2.2 Output directories and files"). The model file is named 'last_trained_model.keras'.
+When running a training, the model is saved at the end of each epoch in the **'saved_models'** directory that is under the experiment directory (see section "2.2 Output directories and files"). The model file is named 'last_model.keras'.
 
-To resume a training, you first need to choose the experiment you want to restart from. Then, set
-the `resume_training_from` attribute of the 'training' section to the path to the 'last_trained_model.keras' file of the
-experiment. An example is shown below.
+To resume a training, you first need to choose the experiment you want to restart from. Then, set the `model_path` attribute of the 'model' section to the path to the 'last_model.keras' file of the experiment. An example is shown below.
+
 
 ```yaml
 operation_mode: training
-
+model: 
+  model_path: <path to the 'last_trained_model.keras' file of the interrupted/crashed training>
 dataset:
   format: tfs
   dataset_name: coco
@@ -418,10 +418,8 @@ training:
       monitor: val_accuracy
       factor: 0.1
       patience: 10
-  resume_training_from: <path to the 'last_trained_model.keras' file of the interrupted/crashed training>
-```
 
-When setting the `resume_training_from` attribute, the `model:` subsection of the `training:` section and the `model_path` attribute of the `model:` section should not be used. An error will be thrown if you do so.
+```
 
 The configuration file of the training you are resuming should be reused as is, the only exception being the number of
 epochs. If you make changes to the dropout rate, the frozen layers or the optimizer, they will be ignored and the

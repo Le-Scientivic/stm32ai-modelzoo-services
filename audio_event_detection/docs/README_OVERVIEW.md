@@ -555,8 +555,7 @@ training:
   dropout: 0 # Set to a float >0 to add dropout to the last layer of the model
   batch_size: 16
   epochs: 50 # Number of epochs to run 
-  resume_training_from: # Optional, use to resume a training from a previous experiment.
-                        # Example: experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.keras
+  resume_training: # Optional, use to resume a training from a previous experiment.
   optimizer:
     Adam:  # Use the ADAM optimizer with learning rate 0.001
       learning_rate: 0.001
@@ -901,8 +900,7 @@ training:
   dropout: 0
   batch_size: 16
   epochs: 2 
-  resume_training_from: # Optional, use to resume a training from a previous experiment.
-                        # Example: experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.keras 
+  resume_training: # Optional, use to resume a training from a previous experiment.
   optimizer:
     Adam:
       learning_rate: 0.001
@@ -941,16 +939,17 @@ You may want to resume a training that you interrupted or that crashed.
 
 When training a model, the model is saved at the end of each epoch in the current experiment output directory tree. The model file is in the `tf/src/experiments_outputs/<date-and-time\>/saved_models` directory and it is named `last_augmented_model.keras` (see section "1.3 Output directory structure").
 
-To resume a training, you need to choose the experiment you want to restart from and set the `resume_training_from` attribute in the `training` section to the path to the `last_augmented_model.keras` model file of this experiment. An example is shown in the YAML code example below. You still need a dataset, preprocessing and feature_extraction section, but they are omitted here for the sake of readability.
+To resume a training, you need to choose the experiment you want to restart from and set the `resume_training` attribute in the `training` section to **True** and the `model_path` in the `model` section to `last_augmented_model.keras` model file of this experiment. An example is shown in the YAML code example below. You still need a dataset, preprocessing and feature_extraction section, but they are omitted here for the sake of readability.
 
 
 ```yaml
 operation_mode: training
-
+model: 
+  model_path: <path-to-a-Keras-model-file>   # Path to the 'last_augmented_model.keras' file to resume training from
 training:
    batch_size: 16
    epochs: 50
-   resume_training_from: <path-to-a-Keras-model-file>   # Path to the 'last_augmented_model.keras' file to resume training from
+   resume_training: True
 ```
 
 It is recommended that you restart from the same configuration file that you used for the training you are resuming. If you make changes to the dropout rate, the frozen layers or the optimizer, they will ignored and the settings from the training you are resuming will be kept. Changes made to the batch size, number of epochs and callbacks will be taken into account.

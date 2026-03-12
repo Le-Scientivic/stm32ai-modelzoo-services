@@ -10,7 +10,7 @@
 def prepare_kwargs_for_model(cfg):
     in_chans = 3
     #if getattr(cfg, 'input_size', None) is not None:
-    in_chans = tuple(cfg.model.input_shape)[0] # TODO ST: HWC Torch: CHW
+    in_chans = tuple(cfg.model.input_shape)[0] # ST: HWC Torch: CHW
 
     model_kwargs = {
         'in_chans': in_chans,

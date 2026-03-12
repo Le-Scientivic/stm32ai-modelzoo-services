@@ -27,6 +27,7 @@ from tabulate import tabulate
 from pathlib import Path
 
 from object_detection.tf.src.postprocessing import get_detections, generate_ssd_priors,convert_locations_to_boxes
+from object_detection.tf.src.models import model_family
 from object_detection.tf.src.utils import ai_runner_invoke
 from object_detection.tf.src.utils import ObjectDetectionMetricsData, calculate_objdet_metrics, calculate_average_metrics
 from common.evaluation import model_is_quantized
@@ -164,11 +165,11 @@ class ONNXModelEvaluator:
             batch_size = exmpl.shape[0]
 
         if self.cfg.model.framework == "torch":
-            if ("yolod" in str(getattr(self.cfg.model, "model_name", "") or "").lower()) or ("yolod" in str(getattr(self.cfg.model, "model_type", "") or "").lower()):
+            if model_family(self.cfg.model.model_type) == "st_yolod":
                 ds = self.eval_ds.dataset
                 _, labels, _, _ = ds[0]
                 num_labels = int(labels.shape[0])
-            if ("ssd" in str(getattr(self.cfg.model, "model_name", "") or "").lower()) or ("ssd" in str(getattr(self.cfg.model, "model_type", "") or "").lower()):
+            if model_family(self.cfg.model.model_type) == "ssd":
                 ds = self.eval_ds.dataset
                 _, _, labels = ds[0]
                 num_labels = int(labels.shape[0])
@@ -184,7 +185,7 @@ class ONNXModelEvaluator:
 
         for i, data in enumerate(tqdm.tqdm(self.eval_ds)):
             if self.cfg.model.framework == "torch":
-                if ("yolod" in str(getattr(self.cfg.model, "model_name", "") or "").lower()) or ("yolod" in str(getattr(self.cfg.model, "model_type", "") or "").lower()):
+                if model_family(self.cfg.model.model_type) == "st_yolod":
                     images, gt_labels, _, _ = data
                     images_np = images.cpu().numpy()
                     gt_labels = gt_labels.cpu().numpy()
@@ -202,7 +203,7 @@ class ONNXModelEvaluator:
 
                     # keep class id in index 0, replace [1:5] with [x_min, y_min, x_max, y_max]
                     gt_labels = tf.stack([gt_labels[..., 0], x_min, y_min, x_max, y_max],axis=-1).numpy()
-                if ("ssd" in str(getattr(self.cfg.model, "model_name", "") or "").lower()) or ("ssd" in str(getattr(self.cfg.model, "model_type", "") or "").lower()):
+                if model_family(self.cfg.model.model_type) == "ssd":
                     # The DataLoader returns encoded boxes (MatchPrior targets), not raw GT.
                     # Fetching raw GT directly from the dataset using get_annotation().
                     images, _, _ = data  # Ignore encoded boxes/classes from DataLoader
@@ -302,7 +303,7 @@ class ONNXModelEvaluator:
                 if n_outputs == 1:
                     predictions = [np.concatenate([results[j][0] for j in range(len(results))], axis=0)]
                 else:
-                    if ("ssd" in str(getattr(self.cfg.model, "model_name", "") or "").lower()) or ("ssd" in str(getattr(self.cfg.model, "model_type", "") or "").lower()):
+                    if model_family(self.cfg.model.model_type) == "ssd":
                     
                         classes_list = [results[j][0] for j in range(len(results))]
                         boxes_list   = [results[j][1] for j in range(len(results))]

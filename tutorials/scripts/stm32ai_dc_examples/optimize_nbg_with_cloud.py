@@ -20,14 +20,9 @@ Main Features
 import sys
 import os
 # Append sys.path in order to add import folder for STM32AI
-#dir_name = os.path.dirname(__file__)
-#sys.path.insert(0, os.path.abspath(os.path.join(dir_name, '..')))
-#sys.path.append(os.path.abspath('../../../common'))
-
 SCRIPT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 from common.stm32ai_dc import Stm32Ai, CloudBackend, CliParameters, ModelNotFoundError
-
 
 # Get username/password from your environment 
 username = os.environ.get('STM32AI_USERNAME', None)
@@ -39,8 +34,7 @@ model_path = os.path.join(models_dir_path, 'mobilenet_v1_0.25_96_int8.tflite')
 
 # Create STM32AI Class with Cloud Backend, given a username/password and a possible version
 # Version set to "None" will use the latest version available in Developer Cloud
-ai = Stm32Ai(CloudBackend(username, password, version=None))
-
+ai = Stm32Ai(CloudBackend(username, password, version='3.0.0'))
 try:
     # Upload a model
     ai.upload_model(model_path)

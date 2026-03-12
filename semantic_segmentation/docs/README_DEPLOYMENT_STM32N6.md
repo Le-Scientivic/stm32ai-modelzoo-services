@@ -57,7 +57,7 @@ To configure the deployment, edit [`../config_file_examples/deployment_n6_config
 model:
   model_type: deeplab
   # path to a `.tflite` or `.onnx` file.
-  model_path: ../../../stm32ai-modelzoo/semantic_segmentation/deeplabv3/ST_pretrainedmodel_public_dataset/person_coco_2017_pascal_voc_2012/st_deeplabv3_mnv2_a050_s16_asppv2_320/st_deeplabv3_mnv2_a050_s16_asppv2_320_qdq_int8.onnx
+  model_path: ../../stm32ai-modelzoo/semantic_segmentation/deeplabv3/ST_pretrainedmodel_public_dataset/person_coco_2017_pascal_voc_2012/st_deeplabv3_mnv2_a050_s16_asppv2_320/st_deeplabv3_mnv2_a050_s16_asppv2_320_qdq_int8.onnx
 
 operation_mode: deployment
 ```

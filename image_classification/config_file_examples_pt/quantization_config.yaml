@@ -1,10 +1,8 @@
 operation_mode: quantization
 
 general:
-  workers: 4 
-  no_prefetcher: true
-  display_figures: False 
-
+  display_figures: False
+  
 model: 
   framework: 'torch'
   model_name: 'mobilenetv2_w035_pt' 
@@ -29,17 +27,20 @@ dataset:
   #val_split: "val"
   quantization_split: 0.01
   quantization_path: "/local/datasets/ic_imagenet_2012/val/"
+  workers: 4 
+  no_prefetcher: true
   
 preprocessing: 
-  rescaling:
-    scale: 1/255.0 # TODO scale node is already present under data_augmentation
-    offset: 0
+  rescaling: # Not used for Torch Image Classification
+    scale: None # Not used for Torch Image Classification
+    offset: None # Not used for Torch Image Classification
   resizing:
-    interpolation: nearest # nearest 'Image resize interpolation type (overrides model)'
-    aspect_ratio: fit
-  color_mode: rgb
-  # mean: [0.485, 0.456, 0.406] # 'Override mean pixel value of dataset'
-  # std: [0.229, 0.224, 0.225] # 'Override std deviation of dataset'
+    interpolation: random # 'random' means random.choice(["bilinear", "bicubic"]). This will be used for training data and bilinear is fixed for test data 
+    aspect_ratio: fit # fit is the only aspect_ratio supported for torch image classification.
+  color_mode: rgb # rgb is the only color_mode supported  for torch image classification.
+  normalization:
+    mean: [0.485, 0.456, 0.406] # Subtracted from each channel: (x - mean) / std
+    std: [0.229, 0.224, 0.225] # Divides each channel after mean subtraction
 
 mlflow:
   uri: ./pt/src/experiments_outputs/mlruns

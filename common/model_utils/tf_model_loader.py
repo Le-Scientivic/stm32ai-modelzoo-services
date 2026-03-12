@@ -31,11 +31,11 @@ def load_model_from_path(cfg, model_path):
     model = None
     input_shape = None
     if cfg.training:
-        resume_training_from = getattr(cfg.model, 'resume_training_from', None)
+        resume_training = getattr(cfg.training, 'resume_training', None)
     else:
-        resume_training_from = None
+        resume_training = None
     if file_extension in ['h5', 'keras']:
-        if resume_training_from:
+        if resume_training:
             model = tf.keras.models.load_model(model_path, compile=True)
         else:
             model = tf.keras.models.load_model(model_path, compile=False)

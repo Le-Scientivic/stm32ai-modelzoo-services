@@ -62,7 +62,7 @@ In particular, `operation_mode` should be set to quantization and the `quantizat
 
 ```yaml
 general:
-  model_path: ../../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416_int8.tflite
+  model_path: ../../stm32ai-modelzoo/blob/master/object_detection/st_yoloxn/ST_pretrainedmodel_custom_dataset/st_person/st_yoloxn_d033_w025_416/st_yoloxn_d033_w025_416_int8.tflite
 quantization:
   quantizer: TFlite_converter
   quantization_type: PTQ

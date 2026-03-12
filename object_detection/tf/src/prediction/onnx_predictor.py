@@ -17,6 +17,7 @@ import numpy as np
 import tensorflow as tf
 import cv2
 import onnxruntime
+from tqdm import tqdm
 import matplotlib.pyplot as plt
 from hydra.core.hydra_config import HydraConfig
 
@@ -83,27 +84,84 @@ class ONNXModelPredictor:
         boxes = np.array(boxes, dtype=np.int32)
         classes = np.array(classes, dtype=np.int32)
 
-        file_name_with_extension = os.path.basename(img_path.numpy().decode('utf-8'))
+        if hasattr(img_path, 'numpy'):
+            img_path = img_path.numpy().decode('utf-8')
+        file_name_with_extension = os.path.basename(img_path)
         file_name, _ = os.path.splitext(file_name_with_extension)
         output_dir = "{}/{}".format(HydraConfig.get().runtime.output_dir,"predictions")
         os.makedirs(output_dir, exist_ok=True)
 
+        # Load the original image
+        original_image = cv2.imread(img_path)
+        if original_image is None:
+             raise FileNotFoundError(f"Image not found at path: {img_path}")
+        # Convert BGR to RGB
+        original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)
+
+        # Calculate dimensions
+        orig_h, orig_w = original_image.shape[:2]
+        
         # Calculate dimensions for the displayed image
-        image_width, image_height = np.shape(image)[:2]
-        display_size = 7
-        if image_width >= image_height:
-            x_size = display_size
-            y_size = round((image_width / image_height) * display_size)
+        if image.ndim == 3 and image.shape[0] == 3:
+            image_disp = image.transpose(1, 2, 0)  # CHW → HWC
         else:
-            x_size = round((image_height / image_width) * display_size)
+            image_disp = image
+            
+        model_h, model_w = image_disp.shape[:2]
+
+        # Calculate scaling and padding
+        scale = min(model_w / orig_w, model_h / orig_h)
+        new_w, new_h = int(orig_w * scale), int(orig_h * scale)
+        if model_family(self.cfg.model.model_type) == "st_yolod":
+             pad_x = 0
+             pad_y = 0
+        else:
+             pad_x = (model_w - new_w) / 2
+             pad_y = (model_h - new_h) / 2
+
+        # Transform boxes back to original image coordinates
+        new_boxes = []
+        for box in boxes:
+            xmin, ymin, xmax, ymax = box
+            
+            # Remove padding
+            xmin -= pad_x
+            ymin -= pad_y
+            xmax -= pad_x
+            ymax -= pad_y
+            
+            # Scale back
+            xmin /= scale
+            ymin /= scale
+            xmax /= scale
+            ymax /= scale
+            
+            # Clip to original image dimensions
+            xmin = max(0, min(orig_w, xmin))
+            ymin = max(0, min(orig_h, ymin))
+            xmax = max(0, min(orig_w, xmax))
+            ymax = max(0, min(orig_h, ymax))
+            
+            new_boxes.append([xmin, ymin, xmax, ymax])
+        
+        new_boxes = np.array(new_boxes, dtype=np.int32)
+
+        # Display the image and the bounding boxes on the ORIGINAL image
+        display_size = 7
+        if orig_w >= orig_h:
+            x_size = display_size
+            y_size = (orig_h / orig_w) * display_size
+        else:
+            x_size = (orig_w / orig_h) * display_size
             y_size = display_size
 
-        # Display the image and the bounding boxes
         fig, ax = plt.subplots(figsize=(x_size, y_size))
-        if self.cfg.preprocessing.color_mode.lower() == 'bgr':
-            image = image[...,::-1]
-        ax.imshow(image)
-        plot_bounding_boxes(ax, boxes, classes, scores, class_names)
+        # Remove whitespace around the plot
+        plt.subplots_adjust(top=1, bottom=0, right=1, left=0, hspace=0, wspace=0)
+        plt.margins(0,0)
+
+        ax.imshow(original_image)
+        plot_bounding_boxes(ax, new_boxes, classes, scores, class_names)
         # turning off the grid
         plt.grid(visible=False)
         plt.axis('off')
@@ -111,9 +169,20 @@ class ONNXModelPredictor:
         if self.cfg.general.display_figures:
             plt.show()
         plt.close()
-        # Crop and save predicted boxes
+
+        # Crop and save predicted boxes (using original image mapping)
         if model_family(self.cfg.model.model_type) in ["face_detect_front"]:
-            self._crop_and_save(img_path, image, boxes, file_name, output_dir, stretch_percents = self.cfg.postprocessing.crop_stretch_percents)
+            # Note: _crop_and_save takes original image path and expects normalized boxes relative to 'image_array'. 
+            # Since we have absolute boxes on original image, we might need to adjust _crop_and_save or pass appropriate args.
+            # However, _crop_and_save implementation re-reads the image and normalizes based on passed 'image_array'.
+            # To avoid breaking it, we should probably pass the ORIGINAL image as 'image_array' and boxes normalized to it,
+            # OR refactor _crop_and_save. 
+            # Given the current task is visual output, I will stick to what _crop_and_save likely expects or leave it if it works with input 'image'.
+            # Looking at _crop_and_save: it takes 'image_array' properties to normalize the passed 'boxes'. 
+            # The 'boxes' passed to this function were in model input coordinates (padded). 
+            # 'new_boxes' are in original image coordinates.
+            # Let's simple pass original image as image_array to _crop_and_save and new_boxes.           
+            self._crop_and_save(img_path, original_image, new_boxes, file_name, output_dir, stretch_percents = self.cfg.postprocessing.crop_stretch_percents)
 
     def _crop_and_save(self, image_path, image_array, boxes, base_filename, output_dir, stretch_percents=None):
         """
@@ -212,18 +281,28 @@ class ONNXModelPredictor:
         input_shape = (input_shape[2], input_shape[3], input_shape[1])
         image_size = input_shape[:2]
 
-        cpr = self.cfg.preprocessing.rescaling
-        # if the scale and offsets are 3 number lists instead of scalars using averages
-        offset = np.mean(cpr.offset) if isinstance(cpr.offset, (list, tuple)) else cpr.offset
-        scale = np.mean(cpr.scale) if isinstance(cpr.scale, (list, tuple)) else cpr.scale
+        if model_family(self.cfg.model.model_type) == "st_yolod":
+             pixels_range = (0, 255)
+        elif hasattr(self.cfg.preprocessing, 'mean') and self.cfg.preprocessing.mean is not None and hasattr(self.cfg.preprocessing, 'std') and self.cfg.preprocessing.std is not None:
+            mean = np.mean(self.cfg.preprocessing.mean)
+            std = np.mean(self.cfg.preprocessing.std)
+            # Calculate range for (0 - mean)/std to (255 - mean)/std
+            min_val = (0.0 - mean) / std
+            max_val = (255.0 - mean) / std
+            pixels_range = (min_val, max_val)
+        else:
+            cpr = self.cfg.preprocessing.rescaling
+            # if the scale and offsets are 3 number lists instead of scalars using averages
+            offset = np.mean(cpr.offset) if isinstance(cpr.offset, (list, tuple)) else cpr.offset
+            scale = np.mean(cpr.scale) if isinstance(cpr.scale, (list, tuple)) else cpr.scale
 
-        # calculating pixels range
-        pixels_range = (offset, 255 * scale + offset)
+            # calculating pixels range
+            pixels_range = (offset, 255 * scale + offset)
 
         inputs  = self.model.get_inputs()
         outputs = self.model.get_outputs()
 
-        for images, image_paths in self.predict_ds :
+        for images, image_paths in tqdm(self.predict_ds, desc="Predicting", unit="batch"):
             batch_size = tf.shape(images)[0]
 
             # If the user declares that input will be chfirst, a transpose of the input is needed else
@@ -236,7 +315,17 @@ class ONNXModelPredictor:
                 else:
                     channel_first_images = images
             else:
-                channel_first_images = images
+                # PyTorch: Dataloader is already channel first
+                # Convert torch tensors to numpy for ONNX runtime
+                if hasattr(images, 'cpu'):
+                    images_np = images.cpu().numpy()
+                else:
+                    images_np = images
+                if self.input_chpos == "chfirst" or self.target == 'host':
+                    channel_first_images = images_np
+                else:
+                    # Transpose from NCHW to NHWC if needed
+                    channel_first_images = np.transpose(images_np, [0, 2, 3, 1])
 
             if self.target == 'host':
                 predictions = self.model.run([o.name for o in outputs], {inputs[0].name: channel_first_images})
@@ -248,13 +337,20 @@ class ONNXModelPredictor:
             # Here we consider that the post processing is always expecting chlast data
             # If the user declares that output will be chfirst, a transpose of the output is needed else
             # the compiler will have added a transpose in the onnx model
-            if self.cfg.evaluation.output_chpos=="chfirst" or self.target == 'host':
+            # if self.cfg.evaluation.output_chpos=="chfirst" or self.target == 'host':
                 # For each output of the model, make the transpose chfirst -> chlast
-                for p in range(len(predictions)):
-                    if len(predictions[p].shape)==3:
-                        predictions[p] = tf.transpose(predictions[p],[0,2,1])
-                    elif len(predictions[p].shape)==4:
-                        predictions[p] = tf.transpose(predictions[p],[0,2,3,1])
+            for p in range(len(predictions)):
+                if hasattr(predictions[p], 'numpy'):
+                    predictions[p] = predictions[p].numpy()
+                
+                if len(predictions[p].shape) == 3:
+                    # Heuristic: if dim1 < dim2 (e.g. 21 < 3000), it is likely (N, C, L). Transpose to (N, L, C).
+                    if predictions[p].shape[1] < predictions[p].shape[2]:
+                        predictions[p] = np.transpose(predictions[p], [0, 2, 1])
+                elif len(predictions[p].shape) == 4:
+                     # Heuristic: if dim1 < dim2, assume (N, C, H, W) -> (N, H, W, C)
+                    if predictions[p].shape[1] < predictions[p].shape[2]:
+                        predictions[p] = np.transpose(predictions[p], [0, 2, 3, 1])
 
             if len(predictions) == 1:
                 predictions = predictions[0]
@@ -266,8 +362,7 @@ class ONNXModelPredictor:
             images = remap_pixel_values_range(images, pixels_range, (0, 1))
             boxes = bbox_normalized_to_abs_coords(boxes, image_size=image_size)
             for i in range(batch_size):
-                self._view_image_and_boxes(self.cfg,
-                                        images[i],
+                self._view_image_and_boxes(images[i],
                                         image_paths[i],
                                         boxes[i],
                                         classes[i],

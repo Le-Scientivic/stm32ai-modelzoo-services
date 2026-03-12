@@ -296,8 +296,7 @@ training:
   dropout: 0 # Set to a float >0 to add dropout to the last layer of the model
   batch_size: 16
   epochs: 50 # Number of epochs to run 
-  resume_training_from: # Optional, use to resume a training from a previous experiment.
-                        # Example: experiments_outputs/2023_10_26_18_36_09/saved_models/last_augmented_model.keras
+  resume_training: # Optional, use to resume a training from a previous experiment.
   optimizer:
     Adam:  # Use the ADAM optimizer with learning rate 0.001
       learning_rate: 0.001

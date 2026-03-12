@@ -263,7 +263,7 @@ class ICTrainer:
             log_to_file(self.cfg.output_dir, (f"Weights from model file : {self.cfg.model.model_path}"))
 
         # Add preprocessing layers if not resuming training
-        if self.cfg.training.resume_training_from:
+        if self.cfg.training.resume_training:
             model_summary(self.model)
             self.augmented_model = self.model
         else:

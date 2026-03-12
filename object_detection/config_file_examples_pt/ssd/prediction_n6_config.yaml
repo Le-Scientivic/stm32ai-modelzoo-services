@@ -1,15 +1,16 @@
 operation_mode: prediction
 
 general:
-  saved_models_dir: ssd_mobilenetv1_pt         
+  saved_models_dir: ssdlite_mobilenetv2_pt         
   global_seed: 42
 
 model:
   framework: 'torch' 
   model_type : ssd
+  model_path: ../../stm32ai-modelzoo/object_detection/ssd_mobilenetv1_pt/Public_pretrainedmodel_public_dataset/coco/ssd_mobilenetv1_pt_coco_300/ssd_mobilenetv1_pt_coco_300_qdq_int8.onnx 
   # model_name options for SSD model 
   # ['ssd_mobilenetv1_pt', 'ssdlite_mobilenetv1_pt', 'ssd_mobilenetv2_pt', 'ssdlite_mobilenetv2_pt', 'ssdlite_mobilenetv3small_pt', 'ssdlite_mobilenetv3large_pt']
-  model_name: "ssdlite_mobilenetv3small_pt"
+  model_name: "ssd_mobilenetv1_pt"
   width_mult: 1.0
   pretrained: True
   pretrained_dataset : "coco"
@@ -22,7 +23,7 @@ prediction:
   input_type: uint8     # int8 / uint8 / float32
   output_type: int8     # int8 / uint8 / float32
   input_chpos: chlast   # chlast / chfirst
-  output_chpos: chlast  # chlast / chfirst
+  output_chpos: chfirst  # chlast / chfirst
   target: stedgeai_n6  # host, stedgeai_host, stedgeai_n6
 
 dataset:
