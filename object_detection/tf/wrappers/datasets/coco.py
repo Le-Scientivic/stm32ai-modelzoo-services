@@ -22,6 +22,7 @@ def get_coco(cfg):
     # Add possibility to download the dataset here?
     if args['data_download'] and args['data_dir'] and args['training_path'] == None and\
         cfg.operation_mode in ['training', 'chain_tqe', 'chain_tqeb']:
+        print("try to download data")
         args['training_path'] = download_dataset(data_root=args['data_dir'],
                          dataset_name='coco')
 

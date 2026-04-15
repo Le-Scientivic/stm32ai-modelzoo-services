@@ -1,0 +1,119 @@
+operation_mode: quantization
+general:
+  project_name: quantized_model_st
+  logs_dir: logs
+  model_path: ./object_detection/st_yolodv2tiny_actrelu_pt_coco_288.onnx
+model:
+  model_path: ./object_detection/st_yolodv2tiny_actrelu_pt_coco_288.onnx
+  input_shape:
+  - 288
+  - 288
+  - 3
+  model_type: yolov2t
+dataset:
+  dataset_name: coco
+  download_data: true
+  class_names:
+  - apple
+  - backpack
+  - banana
+  - baseball bat
+  - baseball glove
+  - bear
+  - bed
+  - bench
+  - bicycle
+  - bird
+  - boat
+  - book
+  - bottle
+  - bowl
+  - broccoli
+  - bus
+  - cake
+  - car
+  - carrot
+  - cat
+  - cell phone
+  - chair
+  - clock
+  - couch
+  - cow
+  - cup
+  - dining table
+  - dog
+  - donut
+  - elephant
+  - fire hydrant
+  - fork
+  - frisbee
+  - giraffe
+  - hair drier
+  - handbag
+  - horse
+  - hot dog
+  - keyboard
+  - kite
+  - knife
+  - laptop
+  - microwave
+  - motorcycle
+  - mouse
+  - orange
+  - oven
+  - parking meter
+  - person
+  - pizza
+  - potted plant
+  - refrigerator
+  - remote
+  - sandwich
+  - scissors
+  - sheep
+  - sink
+  - skateboard
+  - skis
+  - snowboard
+  - spoon
+  - sports ball
+  - stop sign
+  - suitcase
+  - surfboard
+  - teddy bear
+  - tennis racket
+  - tie
+  - toaster
+  - toilet
+  - toothbrush
+  - traffic light
+  - train
+  - truck
+  - tv
+  - umbrella
+  - vase
+  - wine glass
+  - zebra
+  data_dir: ./object_detection/data/temp
+  quantization_split: 0.05
+preprocessing:
+  rescaling:
+    scale: 1/255
+    offset: 0
+  resizing:
+    aspect_ratio: fit
+    interpolation: nearest
+  color_mode: rgb
+  postprocessing: null
+  confidence_thresh: 0.001
+  NMS_thresh: 0.5
+  IoU_eval_thresh: 0.5
+  plot_metrics: true
+  max_detection_boxes: 100
+quantization:
+  quantizer: Onnx_quantizer
+  quantization_type: PTQ
+  quantization_input_type: uint8
+  quantization_output_type: float
+  granularity: per_channel
+  optimize: false
+  export_dir: quantized_models

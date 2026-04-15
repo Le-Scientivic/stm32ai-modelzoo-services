@@ -1,0 +1,94 @@
+# ─── Mode opérationnel ───────────────────────────────────────
+operation_mode: quantization
+
+# ─── Paramètres globaux du projet ────────────────────────────
+general:
+  project_name: quantized_model_st
+  logs_dir: logs
+  #saved_models_dir: saved_models
+  #global_seed: 123
+  #deterministic_ops: False
+  #display_figures: True
+  gpu_memory_limit: 8          # en Go
+  num_threads_tflite: 4
+  saved_models_dir: saved_models
+  display_figures: false
+  #global_seed: 127
+
+# ─── Modèle ──────────────────────────────────────────────────
+model:
+  model_path: "./models/st_yolodv2tiny_actrelu_pt_coco_288.onnx"
+  input_shape: (288, 288, 3)
+  model_type: yolov2t   #/ST_YoloDv2Tiny_pt Indiquer le type pour le post-traitement
+
+# ─── Dataset ─────────────────────────────────────────────────
+dataset:
+  dataset_name: coco
+  download_data: True   # Télécharge automatiquement si absent
+  format: tfs
+  class_names: [apple, backpack, banana, baseball bat, baseball glove, bear, bed, bench, bicycle, bird, boat, book, bottle, bowl, broccoli, bus, cake, car, carrot, cat, cell phone, chair, clock, couch, cow, cup, dining table, dog, donut, elephant, fire hydrant, fork, frisbee, giraffe, hair drier, handbag, horse, hot dog, keyboard, kite, knife, laptop, microwave, motorcycle, mouse, orange, oven, parking meter, person, pizza, potted plant, refrigerator, remote, sandwich, scissors, sheep, sink, skateboard, skis, snowboard, spoon, sports ball, stop sign, suitcase, surfboard, teddy bear, tennis racket, tie, toaster, toilet, toothbrush, traffic light, train, truck, tv, umbrella, vase, wine glass, zebra]
+  data_dir : ./data/temp
+  #training_path: ./datasets/train
+  #validation_split: 0.1
+  #test_path:
+  quantization_path: ./datasets/dataset_converter/subset_chess/train #utilise training path si non défini
+  quantization_split: 0.05      # utiliser 5% du dataset de quantization
+
+
+#─── Preprocessing ─── Used to feed the model
+preprocessing:
+  rescaling:
+    scale: 1/255
+    offset: 0
+  resizing:
+    aspect_ratio: fit
+    interpolation: nearest
+  color_mode: rgb
+
+#─── Postprocessing ─── Only for evaluation of the model
+postprocessing:
+  confidence_thresh: 0.001
+  NMS_thresh: 0.5
+  IoU_eval_thresh: 0.5
+  plot_metrics: True
+  max_detection_boxes: 100
+
+data_augmentation:
+  random_contrast:
+    factor: 0.4
+  random_brightness:
+    factor: 0.3
+  random_flip:
+    mode: horizontal
+  random_translation:
+    width_factor: 0.15
+    height_factor: 0.15
+    fill_mode: reflect
+    interpolation: nearest
+  random_rotation:
+    factor: 0.02
+    fill_mode: reflect
+    interpolation: nearest
+  random_crop:
+    crop_center_x: (0.25, 0.75)
+    crop_center_y: (0.25, 0.75)
+    crop_width: (0.6, 0.9)
+    crop_height: (0.6, 0.9)
+    change_rate: 0.9
+
+  # ─── Quantization ────────────────────────────────────────────
+quantization:
+  quantizer: Onnx_quantizer
+  quantization_type: PTQ
+  quantization_input_type: uint8 #car images [0...255]
+  quantization_output_type: float
+  granularity: per_channel
+  optimize: False
+  export_dir: quantized_models
+
+mlflow:
+  uri: ./tf/src/experiments_outputs/mlruns
+
+hydra:
+  run:
+    dir: ./tf/src/experiments_outputs/${now:%Y_%m_%d_%H_%M_%S}

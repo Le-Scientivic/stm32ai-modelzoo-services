@@ -1,0 +1,19 @@
+operation_mode: quantization
+general:
+  project_name: quantized_ethan_model
+  logs_dir: logs
+model:
+  model_path: ./object_detection/best (3).onnx
+  input_shape:
+  - 320
+  - 320
+  - 3
+dataset:
+  quantization_path: ./object_detection/data/OD_datasets/YOLO_custom
+  quantization_split: 0.05
+quantization:
+  quantization_input_type: float
+  quantization_output_type: float
+  granularity: per_channel
+  optimize: false
+  export_dir: quantized_models

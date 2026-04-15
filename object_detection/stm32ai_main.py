@@ -107,6 +107,8 @@ def process_mode(cfg: DictConfig):
         print("[INFO] evaluation complete")
 
     elif mode == "quantization":
+        print("dataLoaders = ")
+        print(dataloaders)
         quantizer = get_quantizer(cfg=cfg,
                                 model=model,
                                 dataloaders=dataloaders)
